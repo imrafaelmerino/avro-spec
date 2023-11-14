@@ -13,18 +13,18 @@ from [json-values](https://github.com/imrafaelmerino/json-values) through the wi
 ## Code Wins Arguments
 
 ```code
-JsSpec typeEmailSpec = JsEnumBuilder.withName("phone-type")
+JsSpec typeEmailSpec = JsEnumBuilder.withName("phone_type")
                                     .withNamespace("example.com")
                                     .build("MOBILE","FIXED");
                                 
-JsSpec phoneSpec = JsObjSpecBuilder.withName("person-phone")
+JsSpec phoneSpec = JsObjSpecBuilder.withName("person_phone")
                                    .withNamespace("example.com")
                                    .build(JsObjSpec.of("number",JsSpecs.str(),
                                                        "type", typeEmailSpec
                                                       )
                                          );
 
-JsSpec emailSpec = JsObjSpecBuilder.withName("person-email")
+JsSpec emailSpec = JsObjSpecBuilder.withName("person_email")
                                    .withNamespace("example.com")
                                    .build(JsObjSpec.of("address",JsSpecs.str(),
                                                        "verified", JsSpecs.bool()
