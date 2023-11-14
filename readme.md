@@ -4,8 +4,8 @@
 
 ## Introduction
 
-`avro-spec` empowers you to create schemas and serializers/deserializers
-from [specs](https://github.com/imrafaelmerino/json-values#specs). Leveraging the simplicity,
+`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers
+with the [specs](https://github.com/imrafaelmerino/json-values#specs) from json-values. Leveraging the simplicity,
 intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided
 serializers/deserializers enable the transmission of immutable and persistent JSON
 from [json-values](https://github.com/imrafaelmerino/json-values) through the wire.
