@@ -209,8 +209,6 @@ public class AvroSpecIntegrationTest {
     @RegisterExtension
     static Debugger debugger = avroDebugger(Duration.ofSeconds(2));
 
-    // Your test methods involving Avro serialization/deserialization go here
-
     private static Debugger avroDebugger(Duration duration) {
         Debugger debugger = Debugger.of(duration);
         debugger.addEventConsumer("AvroSpecDeserializerEvent", 
@@ -219,6 +217,9 @@ public class AvroSpecIntegrationTest {
                                   SpecSerializerDebugger.INSTANCE);
         return debugger;
     }
+
+    // Your test methods involving Avro serialization/deserialization go here
+
     
     @Test
     public void test(){
