@@ -10,10 +10,13 @@ import org.apache.avro.io.EncoderFactory;
 import java.io.ByteArrayOutputStream;
 
 import static jsonvalues.spec.AvroUtils.isRecordSchema;
+
 /**
  * Thread-safe class for serializing JSON objects to Avro binary or JSON format based on a provided Avro schema.
  */
 public final class SpecSerializer {
+
+    final String name;
 
     final JsSpec spec;
     final Schema schema;
@@ -21,9 +24,19 @@ public final class SpecSerializer {
     final EncoderFactory factory;
     final GenericDatumWriter<GenericRecord> writer;
 
-    SpecSerializer(JsSpec spec, BinaryEncoder reused, EncoderFactory factory) {
+    final boolean enableDebug;
+
+    SpecSerializer(String serializerName,
+                   JsSpec spec,
+                   BinaryEncoder reused,
+                   EncoderFactory factory,
+                   boolean enableDebug
+                  ) {
+        this.name = serializerName;
+        this.enableDebug = enableDebug;
+        assert !enableDebug || name != null;
         this.schema = SpecToSchema.convert(spec);
-        if (!isRecordSchema(schema)) throw  SpecSerializerException.invalidSpecForRecords();
+        if (!isRecordSchema(schema)) throw SpecSerializerException.invalidSpecForRecords();
         this.spec = spec;
         this.reused = reused;
         this.factory = factory;
@@ -43,20 +56,54 @@ public final class SpecSerializer {
         assert spec.test(json).isEmpty() :
                 "The json object doesn't conform the spec. Errors: %s".formatted(spec.test(json));
 
+        var event = start();
         try {
             var record = JsonToAvro.toRecord(json, schema);
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
                 var encoder = factory.binaryEncoder(stream, reused);
                 writer.write(record, encoder);
                 encoder.flush();
-                return stream.toByteArray();
+                byte[] xs = stream.toByteArray();
+                end(event);
+                return xs;
             }
         } catch (MetadataNotFoundException | SpecNotSupportedInAvroException | SpecToSchemaException |
                  JsonToAvroException e) {
+            end(event, e);
             throw e;
         } catch (Exception e) {
+            end(event, e);
             throw new SpecSerializerException(e);
 
+        }
+
+
+    }
+
+
+    private AvroSpecSerializerEvent start() {
+        if (enableDebug) {
+            assert name != null;
+            var event = new AvroSpecSerializerEvent(name);
+            event.begin();
+            return event;
+        } else return null;
+    }
+
+    private void end(AvroSpecSerializerEvent event) {
+        if (enableDebug) {
+            assert name != null;
+            event.registerSuccess();
+            event.commit();
+        }
+
+    }
+
+    private void end(AvroSpecSerializerEvent event, Exception e) {
+        if (enableDebug) {
+            assert name != null;
+            event.registerError(e);
+            event.commit();
         }
 
     }
@@ -75,6 +122,8 @@ public final class SpecSerializer {
         assert spec.test(json).isEmpty() :
                 "The json doesn't conform the spec. Errors: %s".formatted(spec.test(json));
 
+        var event = start();
+
         try {
             var record = JsonToAvro.toRecord(json, schema);
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
@@ -85,8 +134,10 @@ public final class SpecSerializer {
             }
         } catch (MetadataNotFoundException | SpecNotSupportedInAvroException | SpecToSchemaException |
                  JsonToAvroException e) {
+            end(event);
             throw e;
         } catch (Exception e) {
+            end(event,e);
             throw new SpecSerializerException(e);
 
         }

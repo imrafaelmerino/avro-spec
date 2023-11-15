@@ -12,12 +12,12 @@ import java.nio.charset.StandardCharsets;
 import static jsonvalues.spec.AvroUtils.isRecordSchema;
 
 /**
- * Thread-safe class for converting Avro binary or JSON-encoded data to JSON values based on reader and writer specifications.
+ * Thread-safe class for converting Avro binary or JSON-encoded data to JSON values based on reader and writer
+ * specifications.
  * <p>
  * This class provides methods to decode Avro binary or JSON data into JSON values using the specified reader and writer
  * specifications. It ensures that the decoded JSON values conform to the reader specification.
  * </p>
- *
  */
 public final class SpecDeserializer {
 
@@ -35,12 +35,22 @@ public final class SpecDeserializer {
 
     final GenericDatumReader<GenericRecord> reader;
 
-    SpecDeserializer(JsSpec readerSpec,
+    final boolean enableDebug;
+
+    final String name;
+
+
+    SpecDeserializer(String name,
+                     JsSpec readerSpec,
                      JsSpec writerSpec,
                      GenericRecord reusedRecord,
                      DecoderFactory decoderFactory,
-                     BinaryDecoder reusedDecoder
+                     BinaryDecoder reusedDecoder,
+                     boolean enableDebug
                     ) {
+        this.name = name;
+        this.enableDebug = enableDebug;
+        assert !enableDebug || name != null;
         this.readerSpec = readerSpec;
         this.writerSpec = writerSpec;
         this.reusedRecord = reusedRecord;
@@ -48,10 +58,11 @@ public final class SpecDeserializer {
         this.reusedDecoder = reusedDecoder;
         this.readerSchema = SpecToSchema.convert(readerSpec);
         this.writerSchema = SpecToSchema.convert(writerSpec);
-        if (!isRecordSchema(readerSchema)) throw  SpecDeserializerException.invalidSpecForRecords();
-        if (!isRecordSchema(writerSchema)) throw  SpecDeserializerException.invalidSpecForRecords();
+        if (!isRecordSchema(readerSchema)) throw SpecDeserializerException.invalidSpecForRecords();
+        if (!isRecordSchema(writerSchema)) throw SpecDeserializerException.invalidSpecForRecords();
         this.reader = new GenericDatumReader<>(writerSchema,
                                                readerSchema);
+
     }
 
 
@@ -64,17 +75,19 @@ public final class SpecDeserializer {
      */
     public JsObj binaryDecode(final byte[] json) {
 
-
+        var event = start();
         try {
             var decoder = decoderFactory.binaryDecoder(json, reusedDecoder);
             GenericRecord record = reader.read(reusedRecord, decoder);
             JsObj decoded = AvroToJson.toJsObj(record);
-            assert readerSpec.test(decoded).isEmpty(): "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: "+readerSpec.test(decoded);
+            assert readerSpec.test(decoded).isEmpty() : "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: " + readerSpec.test(decoded);
             return decoded;
         } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
                  AvroToJsonException e) {
+            end(event);
             throw e;
         } catch (Exception e) {
+            end(event,e);
             throw new SpecDeserializerException(e);
         }
 
@@ -88,18 +101,48 @@ public final class SpecDeserializer {
      * @throws SpecDeserializerException If there is an error during deserialization.
      */
     public JsObj jsonDecode(final byte[] json) {
+        var event = start();
         try {
             var decoder = decoderFactory.jsonDecoder(readerSchema, new String(json, StandardCharsets.UTF_8));
             GenericRecord record = reader.read(reusedRecord, decoder);
             return AvroToJson.toJsObj(record);
         } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
                  AvroToJsonException e) {
+            end(event);
             throw e;
         } catch (Exception e) {
+            end(event,e);
             throw new SpecDeserializerException(e);
         }
 
     }
+
+
+    private AvroSpecDeserializerEvent start() {
+        if (enableDebug) {
+            var event = new AvroSpecDeserializerEvent(name);
+            event.begin();
+            return event;
+        } else return null;
+    }
+
+    private void end(AvroSpecDeserializerEvent event) {
+        if (enableDebug) {
+            event.registerSuccess();
+            event.commit();
+        }
+
+    }
+
+    private void end(AvroSpecDeserializerEvent event, Exception e) {
+        if (enableDebug) {
+            assert name != null;
+            event.registerError(e);
+            event.commit();
+        }
+
+    }
+
 
 
 }
