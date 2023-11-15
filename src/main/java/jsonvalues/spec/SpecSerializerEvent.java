@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Name("AvroSpecSerializerEvent")
 @Category({"Avro Spec Serializers Events"})
 @Description("Event for tracking Avro spec serialization")
-class AvroSpecSerializerEvent extends Event {
+class SpecSerializerEvent extends Event {
 
     private static final AtomicLong successCounter = new AtomicLong(0);
     private static final AtomicLong errorCounter = new AtomicLong(0);
@@ -30,7 +30,7 @@ class AvroSpecSerializerEvent extends Event {
     @Label("Error Counter")
     long errorsCountersStat;
 
-    AvroSpecSerializerEvent(String name) {
+    SpecSerializerEvent(String name) {
         this.name = Objects.requireNonNull(name);
     }
 

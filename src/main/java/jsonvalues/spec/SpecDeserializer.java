@@ -81,6 +81,7 @@ public final class SpecDeserializer {
             GenericRecord record = reader.read(reusedRecord, decoder);
             JsObj decoded = AvroToJson.toJsObj(record);
             assert readerSpec.test(decoded).isEmpty() : "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: " + readerSpec.test(decoded);
+            end(event);
             return decoded;
         } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
                  AvroToJsonException e) {
@@ -105,7 +106,10 @@ public final class SpecDeserializer {
         try {
             var decoder = decoderFactory.jsonDecoder(readerSchema, new String(json, StandardCharsets.UTF_8));
             GenericRecord record = reader.read(reusedRecord, decoder);
-            return AvroToJson.toJsObj(record);
+            JsObj xs = AvroToJson.toJsObj(record);
+            assert readerSpec.test(xs).isEmpty() : "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: " + readerSpec.test(xs);
+            end(event);
+            return xs;
         } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
                  AvroToJsonException e) {
             end(event);
@@ -118,15 +122,15 @@ public final class SpecDeserializer {
     }
 
 
-    private AvroSpecDeserializerEvent start() {
+    private SpecDeserializerEvent start() {
         if (enableDebug) {
-            var event = new AvroSpecDeserializerEvent(name);
+            var event = new SpecDeserializerEvent(name);
             event.begin();
             return event;
         } else return null;
     }
 
-    private void end(AvroSpecDeserializerEvent event) {
+    private void end(SpecDeserializerEvent event) {
         if (enableDebug) {
             event.registerSuccess();
             event.commit();
@@ -134,7 +138,7 @@ public final class SpecDeserializer {
 
     }
 
-    private void end(AvroSpecDeserializerEvent event, Exception e) {
+    private void end(SpecDeserializerEvent event, Exception e) {
         if (enableDebug) {
             assert name != null;
             event.registerError(e);

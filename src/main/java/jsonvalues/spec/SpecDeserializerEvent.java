@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 @Name("AvroSpecDeserializerEvent")
 @Category({"Avro Spec Deserializer Events"})
 @Description("Event for tracking Avro spec deserialization")
-class AvroSpecDeserializerEvent extends Event {
+class SpecDeserializerEvent extends Event {
 
     private static final AtomicLong successCounter = new AtomicLong(0);
     private static final AtomicLong errorCounter = new AtomicLong(0);
@@ -31,7 +31,7 @@ class AvroSpecDeserializerEvent extends Event {
     @Label("Exception Details")
     String exceptionDetails = "";
 
-    AvroSpecDeserializerEvent(String name) {
+    SpecDeserializerEvent(String name) {
         this.name = requireNonNull(name);
     }
 

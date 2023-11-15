@@ -1,4 +1,4 @@
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.2)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.2/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.3)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.3/jar)
 
 - [Avro spec](#avro-spec)
 - [Code Wins Arguments](#cwa)
@@ -189,6 +189,66 @@ SpecSerializer serializer =
 
 ```
 
+## Integration with Jio-Test for Real-time Debugging
+
+The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a convenient 
+way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java 
+Flight Recorder (JFR) events for Avro serialization and deserialization.
+
+### Usage Example
+
+```code
+import jio.test.junit.Debugger;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import jsonvalues.spec.SpecDeserializerDebugger;
+import jsonvalues.spec.SpecSerializerDebugger;
+
+public class AvroSpecIntegrationTest {
+
+    @RegisterExtension
+    static Debugger debugger = avroDebugger(Duration.ofSeconds(2));
+
+    // Your test methods involving Avro serialization/deserialization go here
+
+    private static Debugger avroDebugger(Duration duration) {
+        Debugger debugger = Debugger.of(duration);
+        debugger.addEventConsumer("AvroSpecDeserializerEvent", 
+                                  SpecDeserializerDebugger.INSTANCE);
+        debugger.addEventConsumer("AvroSpecSerializerEvent",
+                                  SpecSerializerDebugger.INSTANCE);
+        return debugger;
+    }
+    
+    @Test
+    public void test(){
+    
+      ???
+    
+    }
+}
+
+```
+
+Just plugging in the `Debugger`, you'll see the following printed out in the console
+when serializing and deserializing the Json object from json-values:
+
+```text
+
+
+event: avro-serialization, serializer: person-serializer, result: SUCCESS, #errors: 0, #success: 5,
+duration: 360,083 µs, exception: , thread: main, event-start-time: 2023-11-15T14:34:17.88513825+01:00
+
+event: avro-deserialization, deserializer: person-deserializer, result: SUCCESS, #errors: 0, #success: 5,
+duration: 294,875 µs, exception: , thread: main, event-start-time: 2023-11-15T14:34:17.885509458+01:00
+
+event: avro-serialization, serializer: person-serializer, result: SUCCESS, #errors: 0, #success: 6,
+duration: 306,083 µs, exception: , thread: main, event-start-time: 2023-11-15T14:34:17.885926792+01:00
+
+
+
+```
+
+
 ## <a name="specs"><a/> What else can I do with a spec?
 
 **Parsing strings into Json:**
@@ -203,6 +263,7 @@ String personStr = ???;
 JsObj person = personParser.parse(personStr);
 
 ```
+
 
 **Validate JsObj:**
 
@@ -230,7 +291,7 @@ To include avro-spec in your project, add the corresponding dependency to your b
 <dependency>
     <groupId>com.github.imrafaelmerino</groupId>
     <artifactId>avro-spec</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
 </dependency>
 
 ```

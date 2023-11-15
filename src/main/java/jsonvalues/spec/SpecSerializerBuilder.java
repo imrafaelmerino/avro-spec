@@ -33,7 +33,7 @@ public final class SpecSerializerBuilder {
 
     /**
      * Enables debugging for Avro Spec Serialization by capturing Java Flight Recorder (JFR) events. When debug mode is
-     * enabled, the library generates events using the {@link AvroSpecSerializerEvent} class, providing insights into
+     * enabled, the library generates events using the {@link SpecSerializerEvent} class, providing insights into
      * the serialization process. The specified serializer name is used to identify the events and distinguish between
      * different serialization processes.
      *

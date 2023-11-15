@@ -6,7 +6,7 @@
     <groupId>com.github.imrafaelmerino</groupId>
     <artifactId>avro-spec</artifactId>
     <packaging>jar</packaging>
-    <version>0.2</version>
+    <version>0.3</version>
     <name>avro-spec</name>
     <description>The library offers a set of builders and utilities to construct Avro schemas from specs and provides serializers
         and deserializers tailored to these schemas to transmit the immutable and persistent JSON from json-values.
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.github.imrafaelmerino</groupId>
             <artifactId>jio-test</artifactId>
-            <version>1.0.0-RC4</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
 

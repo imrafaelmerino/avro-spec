@@ -81,16 +81,16 @@ public final class SpecSerializer {
     }
 
 
-    private AvroSpecSerializerEvent start() {
+    private SpecSerializerEvent start() {
         if (enableDebug) {
             assert name != null;
-            var event = new AvroSpecSerializerEvent(name);
+            var event = new SpecSerializerEvent(name);
             event.begin();
             return event;
         } else return null;
     }
 
-    private void end(AvroSpecSerializerEvent event) {
+    private void end(SpecSerializerEvent event) {
         if (enableDebug) {
             assert name != null;
             event.registerSuccess();
@@ -99,7 +99,7 @@ public final class SpecSerializer {
 
     }
 
-    private void end(AvroSpecSerializerEvent event, Exception e) {
+    private void end(SpecSerializerEvent event, Exception e) {
         if (enableDebug) {
             assert name != null;
             event.registerError(e);
@@ -130,7 +130,9 @@ public final class SpecSerializer {
                 var encoder = factory.jsonEncoder(schema, stream, pretty);
                 writer.write(record, encoder);
                 encoder.flush();
-                return stream.toByteArray();
+                byte[] xs = stream.toByteArray();
+                end(event);
+                return xs;
             }
         } catch (MetadataNotFoundException | SpecNotSupportedInAvroException | SpecToSchemaException |
                  JsonToAvroException e) {

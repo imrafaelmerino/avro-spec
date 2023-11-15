@@ -3,6 +3,7 @@ package jsonvalues.avro;
 import fun.gen.Combinators;
 import fun.gen.Gen;
 import fun.gen.StrGen;
+import jio.test.junit.Debugger;
 import jio.test.pbt.PropBuilder;
 import jio.test.pbt.TestFailure;
 import jio.test.pbt.TestResult;
@@ -13,9 +14,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +27,10 @@ import java.util.function.Supplier;
 
 import static jsonvalues.spec.JsSpecs.*;
 
-public class Tests {
 
+public class Tests {
+    @RegisterExtension
+    static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(2));
     Supplier<String> nameGen = StrGen.alphabetic(10, 20).sample();
 
 
@@ -102,10 +106,14 @@ public class Tests {
     private static void testSerializer(JsSpec spec, JsObj input, JsObj expected, Map<String, JsValue> defaults) {
 
 
-        SpecSerializer serializer = SpecSerializerBuilder.of(spec)
-                .enableDebug("person-deserializer")
-                                                         .build();
-        SpecDeserializer deserializer = SpecDeserializerBuilder.of(spec, spec).build();
+        SpecSerializer serializer =
+                SpecSerializerBuilder.of(spec)
+                                     .enableDebug("person-serializer")
+                                     .build();
+        SpecDeserializer deserializer =
+                SpecDeserializerBuilder.of(spec, spec)
+                                       .enableDebug("person-deserializer")
+                                       .build();
 
         Assertions.assertTrue(equals(expected, deserializer.binaryDecode(serializer.binaryEncode(input)), defaults));
         Assertions.assertTrue(equals(expected, deserializer.jsonDecode(serializer.jsonEncode(input, true)), defaults));
