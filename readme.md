@@ -1,4 +1,4 @@
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.1)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.1/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.2)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.2/jar)
 
 - [Avro spec](#avro-spec)
 - [Code Wins Arguments](#cwa)
@@ -24,14 +24,14 @@ JsSpec typeEmailSpec = JsEnumBuilder.withName("phone_type")
                                 
 JsSpec phoneSpec = JsObjSpecBuilder.withName("person_phone")
                                    .withNamespace("example.com")
-                                   .build(JsObjSpec.of("number",JsSpecs.str(),
+                                   .build(JsObjSpec.of("number", JsSpecs.str(),
                                                        "type", typeEmailSpec
                                                       )
                                          );
 
 JsSpec emailSpec = JsObjSpecBuilder.withName("person_email")
                                    .withNamespace("example.com")
-                                   .build(JsObjSpec.of("address",JsSpecs.str(),
+                                   .build(JsObjSpec.of("address", JsSpecs.str(),
                                                        "verified", JsSpecs.bool()
                                                       )
                                          );
@@ -65,6 +65,7 @@ System.out.println(schema);
 Resulting Schema:
 
 ```json
+
 {
   "type": "record",
   "name": "person",
@@ -124,16 +125,17 @@ Resulting Schema:
     }
   ]
 }
+
 ```
 
 ## <a name="seria-deseria"><a/> Avro serializer and deserializer
 
 ```code
 
-SpecSerializer serializer = SpecSerializerBuilder.of(recordSpec)
+SpecSerializer serializer = SpecSerializerBuilder.of(personSpec)
                                                  .build();
 
-SpecDeserializer deserializer = SpecDeserializerBuilder.of(recordSpec)
+SpecDeserializer deserializer = SpecDeserializerBuilder.of(personSpec)
                                                        .build();
                                                        
                 
@@ -163,7 +165,7 @@ effectively.
 ```code
 
 SpecDeserializer deserializer = 
-    SpecDeserializerBuilder.of(spec)
+    SpecDeserializerBuilder.of(personSpec)
                            .enableDebug("person-deserializer")
                            .build();
 
@@ -181,7 +183,7 @@ monitoring and diagnosing issues during the Avro spec serialization workflow.
 ```code
 
 SpecSerializer serializer = 
-    SpecSerializerBuilder.of(spec)
+    SpecSerializerBuilder.of(personSpec)
                          .enableDebug("person-serializer")
                          .build();
 
@@ -203,6 +205,7 @@ JsObj person = personParser.parse(personStr);
 ```
 
 **Validate JsObj:**
+
 Validate a JsObj against the spec and get a detailed list of errors, their locations, and causes.
 
 ```code
@@ -227,7 +230,7 @@ To include avro-spec in your project, add the corresponding dependency to your b
 <dependency>
     <groupId>com.github.imrafaelmerino</groupId>
     <artifactId>avro-spec</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
 </dependency>
 
 ```
