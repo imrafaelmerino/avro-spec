@@ -102,7 +102,9 @@ public class Tests {
     private static void testSerializer(JsSpec spec, JsObj input, JsObj expected, Map<String, JsValue> defaults) {
 
 
-        SpecSerializer serializer = SpecSerializerBuilder.of(spec).build();
+        SpecSerializer serializer = SpecSerializerBuilder.of(spec)
+                .enableDebug("person-deserializer")
+                                                         .build();
         SpecDeserializer deserializer = SpecDeserializerBuilder.of(spec, spec).build();
 
         Assertions.assertTrue(equals(expected, deserializer.binaryDecode(serializer.binaryEncode(input)), defaults));

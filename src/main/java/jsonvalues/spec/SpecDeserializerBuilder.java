@@ -6,6 +6,8 @@ import org.apache.avro.io.DecoderFactory;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Builder class for creating instances of {@link SpecDeserializer}.
  * <p>
@@ -19,6 +21,11 @@ public final class SpecDeserializerBuilder {
     private GenericRecord reusedRecord;
     private DecoderFactory decoderFactory = DecoderFactory.get();
     private BinaryDecoder reusedDecoder;
+
+    private boolean enableDebug = false;
+    private String deserializerName;
+
+
 
     private SpecDeserializerBuilder(JsSpec readerSpec, JsSpec writerSpec) {
         this.readerSpec = Objects.requireNonNull(readerSpec);
@@ -80,11 +87,26 @@ public final class SpecDeserializerBuilder {
     }
 
     /**
+     * Enables debugging for Avro Spec Deserialization by capturing Java Flight Recorder (JFR) events.
+     * When debug mode is enabled, the library generates events using the {@link AvroSpecDeserializerEvent} class,
+     * providing insights into the deserialization process. The specified deserializer name is used to identify
+     * the events and distinguish between different deserialization processes.
+     *
+     * @param deserializerName The name to identify the deserializer in JFR events.
+     * @return The updated {@link SpecDeserializerBuilder} instance with debugging enabled.
+     */
+    public SpecDeserializerBuilder enableDebug(final String deserializerName) {
+        this.enableDebug = true;
+        this.deserializerName = requireNonNull(deserializerName);
+        return this;
+    }
+
+    /**
      * Builds and returns a new instance of {@link SpecDeserializer} based on the configured settings.
      *
      * @return A new instance of {@code SpecDeserializer}.
      */
     public SpecDeserializer build() {
-        return new SpecDeserializer(readerSpec, writerSpec, reusedRecord, decoderFactory, reusedDecoder);
+        return new SpecDeserializer(deserializerName,readerSpec, writerSpec, reusedRecord, decoderFactory, reusedDecoder,enableDebug);
     }
 }
