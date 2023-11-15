@@ -189,10 +189,11 @@ SpecSerializer serializer =
 
 ```
 
-## Integration with Jio-Test for Real-time Debugging
+### Integration with Jio-Test for Real-time Debugging
 
-The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a convenient 
-way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java 
+The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a
+convenient
+way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java
 Flight Recorder (JFR) events for Avro serialization and deserialization.
 
 ### Usage Example
@@ -229,8 +230,11 @@ public class AvroSpecIntegrationTest {
 
 ```
 
-Just plugging in the `Debugger`, you'll see the following printed out in the console
-when serializing and deserializing the Json object from json-values:
+By simply integrating the `Debugger` extension from Jio-Test, you gain real-time insights into the Avro serialization
+and deserialization events. During the execution of tests involving JSON objects from json-values, the console output
+will provide detailed information about the serialization process. This includes the name of the serializer, the
+result (success or failure), the number of errors encountered, the number of successful operations, the duration of the
+operation, any exceptions that occurred, the thread involved, and the timestamp of the event.
 
 ```text
 
@@ -248,7 +252,6 @@ duration: 306,083 µs, exception: , thread: main, event-start-time: 2023-11-15T1
 
 ```
 
-
 ## <a name="specs"><a/> What else can I do with a spec?
 
 **Parsing strings into Json:**
@@ -263,7 +266,6 @@ String personStr = ???;
 JsObj person = personParser.parse(personStr);
 
 ```
-
 
 **Validate JsObj:**
 
