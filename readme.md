@@ -1,4 +1,4 @@
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.3)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.3/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.4)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.4/jar)
 
 - [Avro spec](#avro-spec)
 - [Code Wins Arguments](#cwa)
@@ -167,108 +167,105 @@ attributes, and we use inheritance to share common fields across all device type
 
 ```code 
 
-  var baseSpec = 
-      JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
-                   TYPE_FIELD, JsEnumBuilder.withName("type")
-                                            .build("mouse", "keyboard", "usb_hub"));
+var baseSpec = 
+  JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
+              TYPE_FIELD, JsEnumBuilder.withName("type")
+                                       .build("mouse", "keyboard", "usb_hub"));
 
-  var baseGen = 
-      JsObjGen.of(NAME_FIELD, JsStrGen.alphabetic());
+var baseGen = JsObjGen.of(NAME_FIELD, JsStrGen.alphabetic());
 
-  var mouseSpec =
-     JsObjSpecBuilder.withName("mouse")
-                     .build(JsObjSpec.of(BUTTON_COUNT_FIELD, JsSpecs.integer(),
-                                         WHEEL_COUNT_FIELD, JsSpecs.integer(),
-                                         TRACKING_TYPE_FIELD, JsEnumBuilder.withName("tracking_type")
-                                                                           .build(TRACKING_TYPE_ENUM)
-                                         )
-                           )
-                     .concat(baseSpec);
+var mouseSpec =
+ JsObjSpecBuilder.withName("mouse")
+                 .build(JsObjSpec.of(BUTTON_COUNT_FIELD, JsSpecs.integer(),
+                                     WHEEL_COUNT_FIELD, JsSpecs.integer(),
+                                     TRACKING_TYPE_FIELD, JsEnumBuilder.withName("tracking_type")
+                                                                       .build(TRACKING_TYPE_ENUM)
+                                     )
+                       )
+                 .concat(baseSpec);
 
-  var mouseGen =
-     JsObjGen.of(BUTTON_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-                 WHEEL_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-                 TRACKING_TYPE_FIELD, Combinators.oneOf(TRACKING_TYPE_ENUM)
-                                                 .map(JsStr::of),
-                 TYPE_FIELD, Gen.cons(JsStr.of("mouse"))
-                 )
-              .concat(baseGen);
+var mouseGen =
+ JsObjGen.of(BUTTON_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+             WHEEL_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+             TRACKING_TYPE_FIELD, Combinators.oneOf(TRACKING_TYPE_ENUM)
+                                             .map(JsStr::of),
+             TYPE_FIELD, Gen.cons(JsStr.of("mouse"))
+            )
+            .concat(baseGen);
 
-  var keyboardSpec =
-     JsObjSpecBuilder.withName("keyboard")
-                     .build(JsObjSpec.of(KEY_COUNT_FIELD, JsSpecs.integer(),
-                                         MEDIA_BUTTONS_FIELD, JsSpecs.bool()
-                                         )
-                           )
-                     .concat(baseSpec);
+var keyboardSpec =
+ JsObjSpecBuilder.withName("keyboard")
+                 .build(JsObjSpec.of(KEY_COUNT_FIELD, JsSpecs.integer(),
+                                     MEDIA_BUTTONS_FIELD, JsSpecs.bool()
+                                     )
+                       )
+                 .concat(baseSpec);
 
-  var keyboardGen =
-     JsObjGen.of(KEY_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-                 MEDIA_BUTTONS_FIELD, JsBoolGen.arbitrary(),
-                 TYPE_FIELD, Gen.cons(JsStr.of("keyboard"))
-                )
-             .concat(baseGen);
+var keyboardGen =
+  JsObjGen.of(KEY_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+              MEDIA_BUTTONS_FIELD, JsBoolGen.arbitrary(),
+              TYPE_FIELD, Gen.cons(JsStr.of("keyboard"))
+             )
+          .concat(baseGen);
 
 
-  var usbHubSpec =
-     JsObjSpecBuilder.withName("usb_hub")
-                     .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD, JsNull.NULL))
-                     .build(JsObjSpec.of(CONNECTED_DEVICES_FIELD,
-                                         JsSpecs.arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD)).nullable()
-                                         )
-                                     .withOptKeys(CONNECTED_DEVICES_FIELD)
-                                     .concat(baseSpec)
+var usbHubSpec =
+  JsObjSpecBuilder.withName("usb_hub")
+                  .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD, JsNull.NULL))
+                  .build(JsObjSpec.of(CONNECTED_DEVICES_FIELD,
+                                      arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD)).nullable()
+                                      )
+                                   .withOptKeys(CONNECTED_DEVICES_FIELD)
+                                   .concat(baseSpec)
                            );
 
-  var usbHubGen =
-     JsObjGen.of(CONNECTED_DEVICES_FIELD,
-                 JsArrayGen.biased(NamedGen.of(PERIPHERAL_FIELD), 2, 10),
-                 TYPE_FIELD, Gen.cons(JsStr.of("usb_hub"))
-                )
-              .withOptKeys(CONNECTED_DEVICES_FIELD)
-              .concat(baseGen);
+var usbHubGen =
+  JsObjGen.of(CONNECTED_DEVICES_FIELD,
+              JsArrayGen.biased(NamedGen.of(PERIPHERAL_FIELD), 2, 10),
+              TYPE_FIELD, Gen.cons(JsStr.of("usb_hub"))
+             )
+           .withOptKeys(CONNECTED_DEVICES_FIELD)
+           .concat(baseGen);
 
 
-  var peripheralSpec =
-     JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
-                         oneSpecOf(mouseSpec,
-                                   keyboardSpec,
-                                   usbHubSpec));
+var peripheralSpec =
+  JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
+                      oneSpecOf(mouseSpec,
+                                keyboardSpec,
+                                usbHubSpec));
 
-  var peripheralGen =
-     NamedGen.of(PERIPHERAL_FIELD,
-                 Combinators.oneOf(mouseGen,
-                                   keyboardGen,
-                                   usbHubGen));
+var peripheralGen =
+   NamedGen.of(PERIPHERAL_FIELD,
+               Combinators.oneOf(mouseGen,
+                                 keyboardGen,
+                                 usbHubGen)
+              );
 
-  Schema schema = SpecToSchema.convert(peripheralSpec);
+Schema schema = SpecToSchema.convert(peripheralSpec);
 
-  System.out.println(schema);
+System.out.println(schema);
 
-  SpecSerializer serializer =
-        SpecSerializerBuilder.of(peripheralSpec)
-                             .enableDebug("peripheral-serializer")
-                             .build();
+SpecSerializer serializer =
+   SpecSerializerBuilder.of(peripheralSpec)
+                        .enableDebug("peripheral-serializer")
+                        .build();
   
-  SpecDeserializer deserializer =
-                SpecDeserializerBuilder.of(peripheralSpec, peripheralSpec)
-                                       .enableDebug("peripheral-deserializer")
-                                       .build();
+SpecDeserializer deserializer =
+   SpecDeserializerBuilder.of(peripheralSpec, peripheralSpec)
+                          .enableDebug("peripheral-deserializer")
+                          .build();
 
-  peripheralGen.sample(10)
-               .forEach(obj -> {
+peripheralGen.sample(10)
+             .forEach(obj -> {
 
+                              byte[] serialized = serializer.binaryEncode(obj);
 
-                  byte[] serialized = serializer.binaryEncode(obj);
+                              JsObj a = deserializer.binaryDecode(serialized);
 
-                  JsObj a = deserializer.binaryDecode(serialized);
-
-                  Assertions.assertEquals(obj,a.filterValues(it->it.isNotNull()));
-
+                              Assertions.assertEquals(obj,a.filterValues(it -> it.isNotNull()));
 
                               }
-                             );
-
+                      );
 
 
 ```
@@ -516,7 +513,7 @@ To include avro-spec in your project, add the corresponding dependency to your b
 <dependency>
     <groupId>com.github.imrafaelmerino</groupId>
     <artifactId>avro-spec</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 </dependency>
 
 ```
