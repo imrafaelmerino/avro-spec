@@ -47,7 +47,7 @@ public final class SpecToSchema {
                                                            "type: `%s`";
     static Schema.Parser parser = new Schema.Parser();
 
-    static Map<String, Schema> cache = new HashMap<>();
+    static Map<String, Schema> avrocache = new HashMap<>();
 
     static {
         LogicalTypes.register(BIG_DECIMAL_LOGICAL_TYPE, schema -> {
@@ -75,29 +75,30 @@ public final class SpecToSchema {
     }
 
 
-    private SpecToSchema() {}
+    private SpecToSchema() {
+    }
 
     /**
      * Converts a {@link JsSpec} to an Avro {@link Schema}.
      * <p>
      * This method supports conversion for {@link JsObjSpec}, {@link JsArraySpec}, and generic {@link JsSpec} instances.
-     * For {@link JsObjSpec}, the conversion is performed by the specialized method {@link #convert(JsObjSpec)}.
-     * For {@link JsArrayOfSpec}, the conversion is performed by the specialized method {@link #convert(JsArraySpec)}.
-     * Generic {@link JsSpec} instances are converted using the Avro {@link Schema.Parser} after converting them to a JSON
-     * representation.
+     * For {@link JsObjSpec}, the conversion is performed by the specialized method {@link #convert(JsObjSpec)}. For
+     * {@link JsArrayOfSpec}, the conversion is performed by the specialized method {@link #convert(JsArraySpec)}.
+     * Generic {@link JsSpec} instances are converted using the Avro {@link Schema.Parser} after converting them to a
+     * JSON representation.
      * </p>
      *
      * @param spec The {@link JsSpec} to convert.
      * @return The Avro {@link Schema} corresponding to the given {@link JsSpec}.
-     * @throws SpecToSchemaException        If an error occurs during the conversion process.
+     * @throws SpecToSchemaException           If an error occurs during the conversion process.
      * @throws SpecNotSupportedInAvroException If the given {@link JsSpec} is not supported in Avro schemas.
-     * @throws MetadataNotFoundException    If metadata required for conversion is not found.
+     * @throws MetadataNotFoundException       If metadata required for conversion is not found.
      */
     public static Schema convert(final JsSpec spec) {
         if (requireNonNull(spec) instanceof JsObjSpec objSpec) return convert(objSpec);
         if (spec instanceof JsArrayOfSpec arrSpec) return convert(arrSpec);
         try {
-            return parser.parse(toJsSchema(spec, JsNothing.NOTHING).toString());
+            return parser.parse(toJsSchema(spec, JsNothing.NOTHING, new ArrayList<>()).toString());
         } catch (SpecToSchemaException | SpecNotSupportedInAvroException | MetadataNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -119,8 +120,8 @@ public final class SpecToSchema {
 
         var fullName = spec.metaData.getFullName();
 
-        if (cache.containsKey(fullName)) {
-            Schema schema = cache.get(fullName);
+        if (avrocache.containsKey(fullName)) {
+            Schema schema = avrocache.get(fullName);
             DebugUtils.debugNonNull(schema,
                                     () -> "Schema " + schema.getFullName() + " was retrieved from cache");
             return schema;
@@ -128,12 +129,12 @@ public final class SpecToSchema {
 
         try {
             //caches the schema and returns the full name in a JsStr
-            var jsFullName = objSpecSchema(spec, JsNothing.NOTHING);
+            var jsFullName = objSpecSchema(spec, JsNothing.NOTHING, new ArrayList<>());
 
             assert jsFullName.isStr(it -> it.equals(fullName)) :
                     "%s != %s".formatted(jsFullName.toString(), fullName);
 
-            return cache.get(fullName);
+            return avrocache.get(fullName);
 
 
         } catch (SpecToSchemaException | SpecNotSupportedInAvroException | MetadataNotFoundException e) {
@@ -155,7 +156,7 @@ public final class SpecToSchema {
      */
     public static Schema convert(final JsArraySpec spec) throws SpecNotSupportedInAvroException {
         try {
-            return parser.parse(toJsSchema(spec, JsNothing.NOTHING).toString());
+            return parser.parse(toJsSchema(spec, JsNothing.NOTHING, new ArrayList<>()).toString());
         } catch (SpecToSchemaException | SpecNotSupportedInAvroException | MetadataNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -165,7 +166,11 @@ public final class SpecToSchema {
 
     }
 
-    private static JsValue toJsSchema(final JsSpec spec, JsValue defaultValue) throws SpecNotSupportedInAvroException {
+    private static JsValue toJsSchema(JsSpec spec,
+                                      JsValue defaultValue,
+                                      List<String> namedSchemaParents
+                                     ) throws SpecNotSupportedInAvroException {
+
         if (spec instanceof JsStrSpec) return strSchema(spec, defaultValue);
         if (spec instanceof JsStrSuchThat) return strSchema(spec, defaultValue);
 
@@ -182,6 +187,7 @@ public final class SpecToSchema {
         if (spec instanceof JsDecimalSpec) return stringSchema(BIG_DECIMAL_TYPE,
                                                                spec.isNullable(),
                                                                defaultValue);
+
         if (spec instanceof JsDecimalSuchThat) return stringSchema(BIG_DECIMAL_TYPE,
                                                                    spec.isNullable(),
                                                                    defaultValue);
@@ -231,8 +237,8 @@ public final class SpecToSchema {
         if (spec instanceof JsInstantSpec) return instantSchema(spec, defaultValue);
         if (spec instanceof JsInstantSuchThat) return instantSchema(spec, defaultValue);
 
-        if (spec instanceof JsArrayOfSpec arrayOfSpec) return arrayOfSpecSchema(arrayOfSpec, defaultValue);
-        if (spec instanceof JsObjSpec objSpec) return objSpecSchema(objSpec, defaultValue);
+        if (spec instanceof JsArrayOfSpec arrayOfSpec) return arrayOfSpecSchema(arrayOfSpec, defaultValue, namedSchemaParents);
+        if (spec instanceof JsObjSpec objSpec) return objSpecSchema(objSpec, defaultValue, namedSchemaParents);
 
 
         if (spec instanceof JsMapOfInt) return mapOfIntSchema(spec, defaultValue);
@@ -240,29 +246,36 @@ public final class SpecToSchema {
         if (spec instanceof JsMapOfLong) return mapOfLongSchema(spec, defaultValue);
         if (spec instanceof JsMapOfBool) return mapOfBoolSchema(spec, defaultValue);
         if (spec instanceof JsMapOfBigInt) return mapOfBigIntegerSchema(spec, defaultValue);
-        if (spec instanceof JsMapOfSpec mapOfSpec) return mapOfSpecSchema(mapOfSpec, defaultValue);
+        if (spec instanceof JsMapOfSpec mapOfSpec) return mapOfSpecSchema(mapOfSpec, defaultValue, namedSchemaParents);
         if (spec instanceof JsMapOfStr) return mapOfStrSchema(spec, defaultValue);
         if (spec instanceof JsMapOfDec) return mapOfDecSchema(spec, defaultValue);
         if (spec instanceof JsMapOfBinary) return mapOfBinarySchema(spec, defaultValue);
         if (spec instanceof JsMapOfInstant) return mapOfInstantSchema(spec, defaultValue);
         if (spec instanceof JsEnum jsEnum) return enumSchema(jsEnum, defaultValue);
 
-        if (spec instanceof OneOf oneOf) return oneOfSchema(oneOf, defaultValue);
-        if (spec instanceof NamedSpec namedSpec)
-            return namedSchema(namedSpec.name, namedSpec.isNullable(), defaultValue);
+        if (spec instanceof OneOf oneOf) return oneOfSchema(oneOf, defaultValue, namedSchemaParents);
+        if (spec instanceof NamedSpec namedSpec) {
+            if (avrocache.containsKey(namedSpec.name)) //only object, enum an fixed can be referenced by name in avro
+                return namedSchema(namedSpec.name, namedSpec.isNullable(), defaultValue);
+            else
+                return toJsSchema(JsSpecCache.get(namedSpec.name), defaultValue, namedSchemaParents);
+        }
 
         throw SpecNotSupportedInAvroException.errorConvertingSpecIntoSchema(spec);
 
     }
 
 
-    private static JsArray oneOfSchema(OneOf js, JsValue keyDefault) {
+    private static JsArray oneOfSchema(OneOf js, JsValue keyDefault, List<String> namedSchemaParents) {
         var specs = js.getSpecs();
         List<JsValue> avroSchemas = new ArrayList<>();
 
         for (int i = 0; i < specs.size(); i++) {
             JsSpec spec = specs.get(i);
-            if (spec instanceof AvroSpec) avroSchemas.add(toJsSchema(spec, JsNothing.NOTHING));
+            if (spec instanceof AvroSpec)
+                avroSchemas.add(toJsSchema(spec,
+                                           JsNothing.NOTHING,
+                                           new ArrayList<>(namedSchemaParents))); //mutable list! each branch their own list of parents
             else throw SpecNotSupportedInAvroException.errorConvertingOneOfIntoSchema(spec, i);
         }
         JsArray schema = JsArray.ofIterable(avroSchemas);
@@ -315,8 +328,8 @@ public final class SpecToSchema {
 
     private static boolean containsEnum(JsArray schema) {
         for (JsValue value : schema) {
-            var isEnum = value.isStr(key -> cache.get(key) != null
-                                            && cache.get(key).getType() == Schema.Type.ENUM);
+            var isEnum = value.isStr(key -> avrocache.get(key) != null
+                                            && avrocache.get(key).getType() == Schema.Type.ENUM);
             if (isEnum) return true;
         }
         return false;
@@ -325,8 +338,8 @@ public final class SpecToSchema {
 
     private static boolean containsFixed(JsArray schema) {
         for (JsValue value : schema) {
-            var isEnum = value.isStr(key -> cache.get(key) != null
-                                            && cache.get(key).getType() == Schema.Type.FIXED);
+            var isEnum = value.isStr(key -> avrocache.get(key) != null
+                                            && avrocache.get(key).getType() == Schema.Type.FIXED);
             if (isEnum) return true;
         }
         return false;
@@ -356,10 +369,11 @@ public final class SpecToSchema {
         return false;
     }
 
-    private static JsValue mapOfSpecSchema(JsMapOfSpec js, JsValue keyDefault) {
+    private static JsValue mapOfSpecSchema(JsMapOfSpec js, JsValue keyDefault, List<String> namedSchemaParents) {
         JsObj schema = JsObj.of(TYPE_FIELD, MAP_TYPE,
                                 VALUES_FIELD, toJsSchema(js.getValueSpec(),
-                                                         JsNothing.NOTHING));
+                                                         JsNothing.NOTHING,
+                                                         namedSchemaParents));
         return getTypeSorted(js.isNullable(),
                              keyDefault,
                              schema);
@@ -367,13 +381,18 @@ public final class SpecToSchema {
     }
 
 
-    private synchronized static JsValue objSpecSchema(JsObjSpec objSpec, JsValue defaultValue) {
+    private synchronized static JsValue objSpecSchema(JsObjSpec objSpec,
+                                                      JsValue defaultValue,
+                                                      List<String> namedSchemaParents
+                                                     ) {
         var metadata = objSpec.getMetaData();
-
         if (metadata == null) throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
-
-        if (cache.containsKey(objSpec.metaData.getFullName()))
-            return namedSchema(objSpec.metaData.getFullName(), objSpec.isNullable(), defaultValue);
+        if (avrocache.containsKey(objSpec.metaData.getFullName()) || namedSchemaParents.contains(metadata.getFullName())) {
+            return namedSchema(objSpec.metaData.getFullName(),
+                               objSpec.isNullable(),
+                               defaultValue);
+        }
+        namedSchemaParents.add(metadata.getFullName());
 
         var bindings = objSpec.getBindings();
         var schema = JsObj.of(NAME_FIELD,
@@ -406,7 +425,7 @@ public final class SpecToSchema {
                                        TYPE_FIELD, toAvro(key,
                                                           keyDefault,
                                                           objSpec.getRequiredFields(),
-                                                          spec)
+                                                          spec, namedSchemaParents)
                                       );
             var doc = fieldsDoc != null ? fieldsDoc.get(key) : null;
             var order = fieldsOrder != null ? fieldsOrder.get(key) : null;
@@ -443,20 +462,21 @@ public final class SpecToSchema {
     }
 
     private static void cacheSchema(String fullName, JsObj schema) {
-        if (!cache.containsKey(fullName))
-            cache.put(fullName,
-                      parser.parse(schema.toString())
-                     );
+        if (!avrocache.containsKey(fullName))
+            avrocache.put(fullName,
+                          parser.parse(schema.toString())
+                         );
     }
 
 
     private static JsValue toAvro(String key,
                                   JsValue keyDefault,
                                   List<String> requiredFields,
-                                  JsSpec spec
+                                  JsSpec spec,
+                                  List<String> namedSchemaParents
                                  ) {
         assert keyDefault != null;
-        JsValue schema = toJsSchema(spec, keyDefault);
+        JsValue schema = toJsSchema(spec, keyDefault, namedSchemaParents);
         //if it were nullable, the above method toJsSchema would've added null to the type...
         if (!spec.isNullable() && !requiredFields.contains(key)) {
             return schema instanceof JsArray arrSchema ?
@@ -472,9 +492,10 @@ public final class SpecToSchema {
     }
 
     private static JsValue arrayOfSpecSchema(JsArrayOfSpec arrayOfSpec,
-                                             JsValue keyDefault
+                                             JsValue keyDefault,
+                                             List<String> namedSchemaParents
                                             ) {
-        JsValue items = toJsSchema(arrayOfSpec.getElemSpec(), JsNothing.NOTHING);
+        JsValue items = toJsSchema(arrayOfSpec.getElemSpec(), JsNothing.NOTHING, namedSchemaParents);
 
         JsObj schema = JsObj.of(TYPE_FIELD, ARRAY_TYPE,
                                 ITEMS_FIELD, items);
@@ -612,7 +633,7 @@ public final class SpecToSchema {
         var metadata = js.getMetaData();
         if (metadata == null) throw MetadataNotFoundException.errorParsingFixedToSchema();
 
-        if (cache.containsKey(metadata.getFullName()))
+        if (avrocache.containsKey(metadata.getFullName()))
             return namedSchema(metadata.getFullName(),
                                js.isNullable(),
                                defaultValue);
@@ -771,7 +792,7 @@ public final class SpecToSchema {
     private synchronized static JsValue enumSchema(JsEnum jsEnum, JsValue defaultValue) {
         var metaData = jsEnum.getMetaData();
         if (metaData == null) throw MetadataNotFoundException.errorParsingEnumToSchema();
-        if (cache.containsKey(metaData.getFullName()))
+        if (avrocache.containsKey(metaData.getFullName()))
             return namedSchema(metaData.getFullName(),
                                jsEnum.isNullable(),
                                defaultValue);

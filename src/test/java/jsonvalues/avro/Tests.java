@@ -106,6 +106,7 @@ public class Tests {
     private static void testSerializer(JsSpec spec, JsObj input, JsObj expected, Map<String, JsValue> defaults) {
 
 
+
         SpecSerializer serializer =
                 SpecSerializerBuilder.of(spec)
                                      .enableDebug("person-serializer")
@@ -669,6 +670,8 @@ public class Tests {
                                                  "age", JsInt.of(73)
                                                 )
                              );
+
+
 
         testSerializer(spec,
                        person, person.set(JsPath.path("/father/father"), JsNull.NULL));
