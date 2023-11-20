@@ -4,6 +4,7 @@
 - [Code Wins Arguments](#cwa)
 - [Avro schemas](#avro-schema)
 - [Avro serializer and deserializer](#seria-deseria)
+- [A more elaborated example with recursive schemas](#recursive-schema)
 - [What else can i do with a spec?](#specs)
 - [Installation](#installation)
 
@@ -153,6 +154,227 @@ you'll get an assertion error, freeing you from checking this in every test you 
 builder have more options to define an `EncoderFactory` different than the default one or to specify `BinaryEncoder` to
 be reused.
 
+## <a name="recursive-schema"><a/> More elaborated example with recursive schemas
+
+The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance
+and the generation of structured data in Java. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and
+validating against specifications.
+
+In this example, picked
+from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
+we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific
+attributes, and we use inheritance to share common fields across all device types.
+
+```code 
+
+  var baseSpec = 
+      JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
+                   TYPE_FIELD, JsEnumBuilder.withName("type")
+                                            .build("mouse", "keyboard", "usb_hub"));
+
+  var baseGen = 
+      JsObjGen.of(NAME_FIELD, JsStrGen.alphabetic());
+
+  var mouseSpec =
+     JsObjSpecBuilder.withName("mouse")
+                     .build(JsObjSpec.of(BUTTON_COUNT_FIELD, JsSpecs.integer(),
+                                         WHEEL_COUNT_FIELD, JsSpecs.integer(),
+                                         TRACKING_TYPE_FIELD, JsEnumBuilder.withName("tracking_type")
+                                                                           .build(TRACKING_TYPE_ENUM)
+                                         )
+                           )
+                     .concat(baseSpec);
+
+  var mouseGen =
+     JsObjGen.of(BUTTON_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+                 WHEEL_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+                 TRACKING_TYPE_FIELD, Combinators.oneOf(TRACKING_TYPE_ENUM)
+                                                 .map(JsStr::of),
+                 TYPE_FIELD, Gen.cons(JsStr.of("mouse"))
+                 )
+              .concat(baseGen);
+
+  var keyboardSpec =
+     JsObjSpecBuilder.withName("keyboard")
+                     .build(JsObjSpec.of(KEY_COUNT_FIELD, JsSpecs.integer(),
+                                         MEDIA_BUTTONS_FIELD, JsSpecs.bool()
+                                         )
+                           )
+                     .concat(baseSpec);
+
+  var keyboardGen =
+     JsObjGen.of(KEY_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
+                 MEDIA_BUTTONS_FIELD, JsBoolGen.arbitrary(),
+                 TYPE_FIELD, Gen.cons(JsStr.of("keyboard"))
+                )
+             .concat(baseGen);
+
+
+  var usbHubSpec =
+     JsObjSpecBuilder.withName("usb_hub")
+                     .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD, JsNull.NULL))
+                     .build(JsObjSpec.of(CONNECTED_DEVICES_FIELD,
+                                         JsSpecs.arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD)).nullable()
+                                         )
+                                     .withOptKeys(CONNECTED_DEVICES_FIELD)
+                                     .concat(baseSpec)
+                           );
+
+  var usbHubGen =
+     JsObjGen.of(CONNECTED_DEVICES_FIELD,
+                 JsArrayGen.biased(NamedGen.of(PERIPHERAL_FIELD), 2, 10),
+                 TYPE_FIELD, Gen.cons(JsStr.of("usb_hub"))
+                )
+              .withOptKeys(CONNECTED_DEVICES_FIELD)
+              .concat(baseGen);
+
+
+  var peripheralSpec =
+     JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
+                         oneSpecOf(mouseSpec,
+                                   keyboardSpec,
+                                   usbHubSpec));
+
+  var peripheralGen =
+     NamedGen.of(PERIPHERAL_FIELD,
+                 Combinators.oneOf(mouseGen,
+                                   keyboardGen,
+                                   usbHubGen));
+
+  Schema schema = SpecToSchema.convert(peripheralSpec);
+
+  System.out.println(schema);
+
+  SpecSerializer serializer =
+        SpecSerializerBuilder.of(peripheralSpec)
+                             .enableDebug("peripheral-serializer")
+                             .build();
+  
+  SpecDeserializer deserializer =
+                SpecDeserializerBuilder.of(peripheralSpec, peripheralSpec)
+                                       .enableDebug("peripheral-deserializer")
+                                       .build();
+
+  peripheralGen.sample(10)
+               .forEach(obj -> {
+
+
+                  byte[] serialized = serializer.binaryEncode(obj);
+
+                  JsObj a = deserializer.binaryDecode(serialized);
+
+                  Assertions.assertEquals(obj,a.filterValues(it->it.isNotNull()));
+
+
+                              }
+                             );
+
+
+
+```
+
+and the Avro schema would be:
+
+````json
+
+[
+  {
+    "type": "record",
+    "name": "mouse",
+    "fields": [
+      {
+        "name": "wheelCount",
+        "type": "int"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "buttonCount",
+        "type": "int"
+      },
+      {
+        "name": "trackingType",
+        "type": {
+          "type": "enum",
+          "name": "tracking_type",
+          "symbols": [
+            "ball",
+            "optical"
+          ]
+        }
+      },
+      {
+        "name": "type",
+        "type": {
+          "type": "enum",
+          "name": "type",
+          "symbols": [
+            "mouse",
+            "keyboard",
+            "usb_hub"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "keyboard",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "keyCount",
+        "type": "int"
+      },
+      {
+        "name": "mediaButtons",
+        "type": "boolean"
+      },
+      {
+        "name": "type",
+        "type": "type"
+      }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "usb_hub",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "type",
+        "type": "type"
+      },
+      {
+        "name": "connectedDevices",
+        "type": [
+          "null",
+          {
+            "type": "array",
+            "items": [
+              "mouse",
+              "keyboard",
+              "usb_hub"
+            ]
+          }
+        ],
+        "default": null
+      }
+    ]
+  }
+]
+
+
+````
+
 **Monitoring Avro Spec Deserialization with JFR Events**
 
 When debugging is enabled for the Avro Spec Deserializer, the library emits Java Flight Recorder (JFR) events to provide
@@ -300,3 +522,4 @@ To include avro-spec in your project, add the corresponding dependency to your b
 
 Requires Java 17 or higher
 
+Find [here](./changelog.md) the releases notes.

@@ -102,19 +102,17 @@ public class ModelingInheritance {
                                               keyboardGen,
                                               usbHubGen));
 
-        var parser = JsObjSpecParser.of(peripheralSpec);
-
         Schema schema = SpecToSchema.convert(peripheralSpec);
 
         System.out.println(schema);
 
         SpecSerializer serializer =
                 SpecSerializerBuilder.of(peripheralSpec)
-                                     .enableDebug("person-serializer")
+                                     .enableDebug("peripheral-serializer")
                                      .build();
         SpecDeserializer deserializer =
                 SpecDeserializerBuilder.of(peripheralSpec, peripheralSpec)
-                                       .enableDebug("person-deserializer")
+                                       .enableDebug("peripheral-deserializer")
                                        .build();
 
         peripheralGen.sample(10).peek(System.out::println)
