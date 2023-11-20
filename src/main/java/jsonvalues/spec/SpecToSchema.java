@@ -255,10 +255,12 @@ public final class SpecToSchema {
 
         if (spec instanceof OneOf oneOf) return oneOfSchema(oneOf, defaultValue, namedSchemaParents);
         if (spec instanceof NamedSpec namedSpec) {
-            if (avrocache.containsKey(namedSpec.name)) //only object, enum an fixed can be referenced by name in avro
+            JsSpec cached = JsSpecCache.get(namedSpec.name);
+            if (cached instanceof JsObjSpec || cached instanceof JsEnum || cached instanceof JsFixedBinary) //only object, enum an fixed can be referenced by name in avro
                 return namedSchema(namedSpec.name, namedSpec.isNullable(), defaultValue);
-            else
-                return toJsSchema(JsSpecCache.get(namedSpec.name), defaultValue, namedSchemaParents);
+            else {
+                return toJsSchema(cached, defaultValue, namedSchemaParents);
+            }
         }
 
         throw SpecNotSupportedInAvroException.errorConvertingSpecIntoSchema(spec);
@@ -387,7 +389,10 @@ public final class SpecToSchema {
                                                      ) {
         var metadata = objSpec.getMetaData();
         if (metadata == null) throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
-        if (avrocache.containsKey(objSpec.metaData.getFullName()) || namedSchemaParents.contains(metadata.getFullName())) {
+        if (avrocache.containsKey(objSpec.metaData.getFullName())
+            || namedSchemaParents.contains(metadata.getFullName())//recursive schema! already processed then return the name
+        )
+        {
             return namedSchema(objSpec.metaData.getFullName(),
                                objSpec.isNullable(),
                                defaultValue);
@@ -414,7 +419,7 @@ public final class SpecToSchema {
         var fieldsOrder = metadata.fieldsOrder();
         var fieldsDefault = metadata.fieldsDefault();
 
-        for (Map.Entry<String, JsSpec> entry : bindings.entrySet()) {
+        for (var entry : bindings.entrySet()) {
             var spec = entry.getValue();
             var key = entry.getKey();
             var keyDefault = fieldsDefault != null && fieldsDefault.get(key) != null ?
@@ -425,7 +430,8 @@ public final class SpecToSchema {
                                        TYPE_FIELD, toAvro(key,
                                                           keyDefault,
                                                           objSpec.getRequiredFields(),
-                                                          spec, namedSchemaParents)
+                                                          spec,
+                                                          namedSchemaParents)
                                       );
             var doc = fieldsDoc != null ? fieldsDoc.get(key) : null;
             var order = fieldsOrder != null ? fieldsOrder.get(key) : null;
