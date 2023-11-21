@@ -149,7 +149,7 @@ Assertions.assertEquals(person,
 
 ```
 
-If the person object conforms to the spec, you are good. During testing, if the object doesn't conform to the spec,
+If the person JSON conforms to the spec, you are good. During testing, if the object doesn't conform to the spec,
 you'll get an assertion error, freeing you from checking this in every test you write. The serializer and deserializer
 builder have more options to define an `EncoderFactory` different than the default one or to specify `BinaryEncoder` to
 be reused.
@@ -428,8 +428,7 @@ SpecSerializer serializer =
 ### Integration with Jio-Test for Real-time Debugging
 
 The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a
-convenient
-way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java
+convenient way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java
 Flight Recorder (JFR) events for Avro serialization and deserialization.
 
 ### Usage Example
