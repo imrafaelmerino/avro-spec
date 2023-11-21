@@ -13,7 +13,7 @@
 `avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers
 with the [specs](https://github.com/imrafaelmerino/json-values#specs) from json-values. Leveraging the simplicity,
 intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided
-serializers/deserializers enable the transmission of immutable and persistent JSON
+serializers/deserializers enable the transmission of the immutable and persistent JSON
 from [json-values](https://github.com/imrafaelmerino/json-values) through the wire.
 
 ## <a name="cwa"><a/> Code Wins Arguments
@@ -170,7 +170,8 @@ attributes, and we use inheritance to share common fields across all device type
 var baseSpec = 
   JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
               TYPE_FIELD, JsEnumBuilder.withName("type")
-                                       .build("mouse", "keyboard", "usb_hub"));
+                                       .build("mouse", "keyboard", "usb_hub")
+              );
 
 var baseGen = JsObjGen.of(NAME_FIELD, JsStrGen.alphabetic());
 
@@ -178,11 +179,12 @@ var mouseSpec =
  JsObjSpecBuilder.withName("mouse")
                  .build(JsObjSpec.of(BUTTON_COUNT_FIELD, JsSpecs.integer(),
                                      WHEEL_COUNT_FIELD, JsSpecs.integer(),
-                                     TRACKING_TYPE_FIELD, JsEnumBuilder.withName("tracking_type")
-                                                                       .build(TRACKING_TYPE_ENUM)
+                                     TRACKING_TYPE_FIELD, 
+                                     JsEnumBuilder.withName("tracking_type")
+                                                  .build(TRACKING_TYPE_ENUM)
                                      )
-                       )
-                 .concat(baseSpec);
+                                 .concat(baseSpec)
+                        );
 
 var mouseGen =
  JsObjGen.of(BUTTON_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
@@ -191,15 +193,15 @@ var mouseGen =
                                              .map(JsStr::of),
              TYPE_FIELD, Gen.cons(JsStr.of("mouse"))
             )
-            .concat(baseGen);
+         .concat(baseGen);
 
 var keyboardSpec =
  JsObjSpecBuilder.withName("keyboard")
                  .build(JsObjSpec.of(KEY_COUNT_FIELD, JsSpecs.integer(),
                                      MEDIA_BUTTONS_FIELD, JsSpecs.bool()
                                      )
-                       )
-                 .concat(baseSpec);
+                                 .concat(baseSpec)    
+                       );
 
 var keyboardGen =
   JsObjGen.of(KEY_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
@@ -217,7 +219,7 @@ var usbHubSpec =
                                       )
                                    .withOptKeys(CONNECTED_DEVICES_FIELD)
                                    .concat(baseSpec)
-                           );
+                        );
 
 var usbHubGen =
   JsObjGen.of(CONNECTED_DEVICES_FIELD,
@@ -232,13 +234,16 @@ var peripheralSpec =
   JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
                       oneSpecOf(mouseSpec,
                                 keyboardSpec,
-                                usbHubSpec));
+                                usbHubSpec
+                                )
+                      );
 
 var peripheralGen =
    NamedGen.of(PERIPHERAL_FIELD,
                Combinators.oneOf(mouseGen,
                                  keyboardGen,
-                                 usbHubGen)
+                                 usbHubGen
+                                 )
               );
 
 Schema schema = SpecToSchema.convert(peripheralSpec);
@@ -260,9 +265,11 @@ peripheralGen.sample(10)
 
                               byte[] serialized = serializer.binaryEncode(obj);
 
-                              JsObj a = deserializer.binaryDecode(serialized);
-
-                              Assertions.assertEquals(obj,a.filterValues(it -> it.isNotNull()));
+                              JsObj deserialized = deserializer.binaryDecode(serialized);
+                              
+                              Assertions.assertEquals(obj,
+                                                      deserialized.filterValues(JsValue::isNotNull())
+                                                     );
 
                               }
                       );
