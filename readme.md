@@ -166,6 +166,16 @@ we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each d
 attributes, and we use inheritance to share common fields across all device types.
 
 ```code 
+String NAME_FIELD = "name";
+String TYPE_FIELD = "type";
+String BUTTON_COUNT_FIELD = "buttonCount";
+String WHEEL_COUNT_FIELD = "wheelCount";
+String TRACKING_TYPE_FIELD = "trackingType";
+String KEY_COUNT_FIELD = "keyCount";
+String MEDIA_BUTTONS_FIELD = "mediaButtons";
+String CONNECTED_DEVICES_FIELD = "connectedDevices";
+String PERIPHERAL_FIELD = "peripheral";
+List<String> TRACKING_TYPE_ENUM = List.of("ball", "optical");
 
 var baseSpec = 
   JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
