@@ -9,18 +9,19 @@ import static java.util.Objects.requireNonNull;
 @SuppressWarnings("serial")
 public class SpecToSchemaException extends RuntimeException {
 
-    SpecToSchemaException(final String message) {
-        super(requireNonNull(message));
-    }
+  SpecToSchemaException(final String message) {
+    super(requireNonNull(message));
+  }
 
-    SpecToSchemaException(final Exception e) {
-        super(requireNonNull(e).getMessage(), e);
-        setStackTrace(e.getStackTrace());
-    }
+  SpecToSchemaException(final Exception e) {
+    super(requireNonNull(e).getMessage(),
+          e);
+    setStackTrace(e.getStackTrace());
+  }
 
-    static SpecToSchemaException logicalTypeForStringType(String logicalType) {
-        return new SpecToSchemaException("The logical type `%s` is only supported by fields of type `string`.".formatted(logicalType));
-    }
+  static SpecToSchemaException logicalTypeForStringType(String logicalType) {
+    return new SpecToSchemaException("The logical type `%s` is only supported by fields of type `string`.".formatted(logicalType));
+  }
 
 
 }

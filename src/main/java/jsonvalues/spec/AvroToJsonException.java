@@ -8,14 +8,15 @@ import java.util.Objects;
 @SuppressWarnings("serial")
 public final class AvroToJsonException extends RuntimeException {
 
-    AvroToJsonException(String message) {
-        super(Objects.requireNonNull(message));
-    }
+  AvroToJsonException(String message) {
+    super(Objects.requireNonNull(message));
+  }
 
-    AvroToJsonException(Exception e) {
-        super(e.getMessage(),e);
-        setStackTrace(e.getStackTrace());
-    }
+  AvroToJsonException(Exception e) {
+    super(e.getMessage(),
+          e);
+    setStackTrace(e.getStackTrace());
+  }
 
 
 }

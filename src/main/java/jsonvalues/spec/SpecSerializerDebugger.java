@@ -1,10 +1,9 @@
 package jsonvalues.spec;
 
-import jdk.jfr.consumer.RecordedEvent;
-
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
+import jdk.jfr.consumer.RecordedEvent;
 
 /**
  * A {@code Consumer<RecordedEvent>} implementation for handling Avro serialization debugging events. It prints
@@ -16,43 +15,44 @@ import java.util.function.Consumer;
  */
 public final class SpecSerializerDebugger implements Consumer<RecordedEvent> {
 
-    /**
-     * Singleton instance of {@code SpecSerializerDebugger}.
-     */
-    public static final SpecSerializerDebugger INSTANCE = new SpecSerializerDebugger();
-    private static final String FORMAT = """
-            event: avro-serialization, serializer: %s, result: %s, #errors: %s, #success: %s,
-            duration: %s, exception: %s, thread: %s, event-start-time: %s
-            """;
+  /**
+   * Singleton instance of {@code SpecSerializerDebugger}.
+   */
+  public static final SpecSerializerDebugger INSTANCE = new SpecSerializerDebugger();
+  private static final String FORMAT = """
+      event: avro-serialization, serializer: %s, result: %s, #errors: %s, #success: %s,
+      duration: %s, exception: %s, thread: %s, event-start-time: %s
+      """;
 
-    private SpecSerializerDebugger() {
+  private SpecSerializerDebugger() {
+  }
+
+  /**
+   * Handles the recorded event by printing formatted information about Avro serialization.
+   *
+   * @param e The recorded event.
+   */
+  @Override
+  public void accept(RecordedEvent e) {
+    String exc = e.getValue("exceptionDetails");
+    var str = String.format(FORMAT,
+                            e.getValue("name"),
+                            e.getValue("result"),
+                            e.getValue("errorsCountersStat"),
+                            e.getValue("successCounterStat"),
+                            DebuggerUtils.formatTime(e.getDuration()
+                                                      .toNanos()),
+                            exc,
+                            DebuggerUtils.getThreadName(e.getThread()),
+                            e.getStartTime()
+                             .atZone(ZoneId.systemDefault())
+                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+                           );
+    synchronized (System.out) {
+      System.out.println(str);
+      System.out.flush();
     }
 
-    /**
-     * Handles the recorded event by printing formatted information about Avro serialization.
-     *
-     * @param e The recorded event.
-     */
-    @Override
-    public void accept(RecordedEvent e) {
-        String exc = e.getValue("exceptionDetails");
-        var str = String.format(FORMAT,
-                                e.getValue("name"),
-                                e.getValue("result"),
-                                e.getValue("errorsCountersStat"),
-                                e.getValue("successCounterStat"),
-                                DebuggerUtils.formatTime(e.getDuration().toNanos()),
-                                exc,
-                                DebuggerUtils.getThreadName(e.getThread()),
-                                e.getStartTime()
-                                 .atZone(ZoneId.systemDefault())
-                                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-
-                               );
-        synchronized (System.out) {
-            System.out.println(str);
-            System.out.flush();
-        }
-
-    }
+  }
 }
