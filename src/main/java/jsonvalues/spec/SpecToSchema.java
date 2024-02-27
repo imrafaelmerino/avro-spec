@@ -1,44 +1,44 @@
 package jsonvalues.spec;
 
 import static java.util.Objects.requireNonNull;
-import static jsonvalues.spec.Constants.ALIASES_FIELD;
-import static jsonvalues.spec.Constants.ARRAY_TYPE;
-import static jsonvalues.spec.Constants.BIG_DECIMAL_TYPE;
-import static jsonvalues.spec.Constants.BIG_INTEGER_TYPE;
-import static jsonvalues.spec.Constants.BINARY_TYPE;
-import static jsonvalues.spec.Constants.BOOLEAN_TYPE;
-import static jsonvalues.spec.Constants.BOOL_NULL_TYPE;
-import static jsonvalues.spec.Constants.DEFAULT_FIELD;
-import static jsonvalues.spec.Constants.DOC_FIELD;
-import static jsonvalues.spec.Constants.DOUBLE_NULL_TYPE;
-import static jsonvalues.spec.Constants.DOUBLE_TYPE;
-import static jsonvalues.spec.Constants.ENUM_TYPE;
-import static jsonvalues.spec.Constants.FIELDS_FIELD;
-import static jsonvalues.spec.Constants.FIXED_TYPE;
-import static jsonvalues.spec.Constants.INT_NULL_TYPE;
-import static jsonvalues.spec.Constants.INT_TYPE;
-import static jsonvalues.spec.Constants.ISO_TYPE;
-import static jsonvalues.spec.Constants.ITEMS_FIELD;
-import static jsonvalues.spec.Constants.LOGICAL_TYPE_FIELD;
-import static jsonvalues.spec.Constants.LONG_NULL_TYPE;
-import static jsonvalues.spec.Constants.LONG_TYPE;
-import static jsonvalues.spec.Constants.MAP_TYPE;
-import static jsonvalues.spec.Constants.NAMESPACE_FIELD;
-import static jsonvalues.spec.Constants.NAME_FIELD;
-import static jsonvalues.spec.Constants.NULL_BOOL_TYPE;
-import static jsonvalues.spec.Constants.NULL_DOUBLE_TYPE;
-import static jsonvalues.spec.Constants.NULL_INT_TYPE;
-import static jsonvalues.spec.Constants.NULL_LONG_TYPE;
-import static jsonvalues.spec.Constants.NULL_STR_TYPE;
-import static jsonvalues.spec.Constants.NULL_TYPE;
-import static jsonvalues.spec.Constants.ORDER_FIELD;
-import static jsonvalues.spec.Constants.SIZE_FIELD;
-import static jsonvalues.spec.Constants.STRING_TYPE;
-import static jsonvalues.spec.Constants.STR_NULL_TYPE;
-import static jsonvalues.spec.Constants.STR_TYPE;
-import static jsonvalues.spec.Constants.SYMBOLS_FIELD;
-import static jsonvalues.spec.Constants.TYPE_FIELD;
-import static jsonvalues.spec.Constants.VALUES_FIELD;
+import static jsonvalues.spec.AvroConstants.ALIASES_FIELD;
+import static jsonvalues.spec.AvroConstants.ARRAY_TYPE;
+import static jsonvalues.spec.AvroConstants.BIG_DECIMAL_TYPE;
+import static jsonvalues.spec.AvroConstants.BIG_INTEGER_TYPE;
+import static jsonvalues.spec.AvroConstants.BINARY_TYPE;
+import static jsonvalues.spec.AvroConstants.BOOLEAN_TYPE;
+import static jsonvalues.spec.AvroConstants.BOOL_NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.DEFAULT_FIELD;
+import static jsonvalues.spec.AvroConstants.DOC_FIELD;
+import static jsonvalues.spec.AvroConstants.DOUBLE_NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.DOUBLE_TYPE;
+import static jsonvalues.spec.AvroConstants.ENUM_TYPE;
+import static jsonvalues.spec.AvroConstants.FIELDS_FIELD;
+import static jsonvalues.spec.AvroConstants.FIXED_TYPE;
+import static jsonvalues.spec.AvroConstants.INT_NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.INT_TYPE;
+import static jsonvalues.spec.AvroConstants.ISO_TYPE;
+import static jsonvalues.spec.AvroConstants.ITEMS_FIELD;
+import static jsonvalues.spec.AvroConstants.LOGICAL_TYPE_FIELD;
+import static jsonvalues.spec.AvroConstants.LONG_NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.LONG_TYPE;
+import static jsonvalues.spec.AvroConstants.MAP_TYPE;
+import static jsonvalues.spec.AvroConstants.NAMESPACE_FIELD;
+import static jsonvalues.spec.AvroConstants.NAME_FIELD;
+import static jsonvalues.spec.AvroConstants.NULL_BOOL_TYPE;
+import static jsonvalues.spec.AvroConstants.NULL_DOUBLE_TYPE;
+import static jsonvalues.spec.AvroConstants.NULL_INT_TYPE;
+import static jsonvalues.spec.AvroConstants.NULL_LONG_TYPE;
+import static jsonvalues.spec.AvroConstants.NULL_STR_TYPE;
+import static jsonvalues.spec.AvroConstants.NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.ORDER_FIELD;
+import static jsonvalues.spec.AvroConstants.SIZE_FIELD;
+import static jsonvalues.spec.AvroConstants.STRING_TYPE;
+import static jsonvalues.spec.AvroConstants.STR_NULL_TYPE;
+import static jsonvalues.spec.AvroConstants.STR_TYPE;
+import static jsonvalues.spec.AvroConstants.SYMBOLS_FIELD;
+import static jsonvalues.spec.AvroConstants.TYPE_FIELD;
+import static jsonvalues.spec.AvroConstants.VALUES_FIELD;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -94,27 +94,27 @@ public final class SpecToSchema {
   static {
     LogicalTypes.register(BIG_DECIMAL_LOGICAL_TYPE,
                           schema -> {
-                              if (schema.getType() != Schema.Type.STRING) {
-                                  throw SpecToSchemaException.logicalTypeForStringType(BIG_DECIMAL_LOGICAL_TYPE);
-                              }
+                            if (schema.getType() != Schema.Type.STRING) {
+                              throw SpecToSchemaException.logicalTypeForStringType(BIG_DECIMAL_LOGICAL_TYPE);
+                            }
 
                             return new LogicalType(BIG_DECIMAL_LOGICAL_TYPE);
                           });
 
     LogicalTypes.register(BIGINTEGER_LOGICAL_TYPE,
                           schema -> {
-                              if (schema.getType() != Schema.Type.STRING) {
-                                  throw SpecToSchemaException.logicalTypeForStringType(BIGINTEGER_LOGICAL_TYPE);
-                              }
+                            if (schema.getType() != Schema.Type.STRING) {
+                              throw SpecToSchemaException.logicalTypeForStringType(BIGINTEGER_LOGICAL_TYPE);
+                            }
 
                             return new LogicalType(BIGINTEGER_LOGICAL_TYPE);
                           });
 
     LogicalTypes.register(ISO_FORMAT_LOGICAL_TYPE,
                           schema -> {
-                              if (schema.getType() != Schema.Type.STRING) {
-                                  throw SpecToSchemaException.logicalTypeForStringType(ISO_FORMAT_LOGICAL_TYPE);
-                              }
+                            if (schema.getType() != Schema.Type.STRING) {
+                              throw SpecToSchemaException.logicalTypeForStringType(ISO_FORMAT_LOGICAL_TYPE);
+                            }
 
                             return new LogicalType(ISO_FORMAT_LOGICAL_TYPE);
                           });
@@ -143,12 +143,12 @@ public final class SpecToSchema {
    * @throws MetadataNotFoundException       If metadata required for conversion is not found.
    */
   public static Schema convert(final JsSpec spec) {
-      if (requireNonNull(spec) instanceof JsObjSpec objSpec) {
-          return convert(objSpec);
-      }
-      if (spec instanceof JsArrayOfSpec arrSpec) {
-          return convert(arrSpec);
-      }
+    if (requireNonNull(spec) instanceof JsObjSpec objSpec) {
+      return convert(objSpec);
+    }
+    if (spec instanceof JsArrayOfSpec arrSpec) {
+      return convert(arrSpec);
+    }
     try {
       return parser.parse(toJsSchema(spec,
                                      JsNothing.NOTHING,
@@ -170,16 +170,16 @@ public final class SpecToSchema {
    * @throws SpecToSchemaException           If an error occurs while converting the specification into a schema.
    */
   public static Schema convert(final JsObjSpec spec) throws SpecNotSupportedInAvroException {
-      if (spec.metaData == null) {
-          throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
-      }
+    if (spec.metaData == null) {
+      throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
+    }
 
     var fullName = spec.metaData.getFullName();
 
     if (avrocache.containsKey(fullName)) {
       Schema schema = avrocache.get(fullName);
-      DebugUtils.debugNonNull(schema,
-                              () -> "Schema " + schema.getFullName() + " was retrieved from cache");
+      DebuggerUtils.debugNonNull(schema,
+                                 () -> "Schema " + schema.getFullName() + " was retrieved from cache");
       return schema;
     }
 
@@ -232,255 +232,255 @@ public final class SpecToSchema {
                                     List<String> namedSchemaParents
                                    ) throws SpecNotSupportedInAvroException {
 
-      if (spec instanceof JsStrSpec) {
-          return strSchema(spec,
-                           defaultValue);
-      }
-      if (spec instanceof JsStrSuchThat) {
-          return strSchema(spec,
-                           defaultValue);
-      }
+    if (spec instanceof JsStrSpec) {
+      return strSchema(spec,
+                       defaultValue);
+    }
+    if (spec instanceof JsStrSuchThat) {
+      return strSchema(spec,
+                       defaultValue);
+    }
 
-      if (spec instanceof JsIntSpec) {
-          return intSchema(spec,
-                           defaultValue);
-      }
-      if (spec instanceof JsIntSuchThat) {
-          return intSchema(spec,
-                           defaultValue);
-      }
+    if (spec instanceof JsIntSpec) {
+      return intSchema(spec,
+                       defaultValue);
+    }
+    if (spec instanceof JsIntSuchThat) {
+      return intSchema(spec,
+                       defaultValue);
+    }
 
-      if (spec instanceof JsLongSpec) {
-          return longSchema(spec,
-                            defaultValue);
-      }
-      if (spec instanceof JsLongSuchThat) {
-          return longSchema(spec,
-                            defaultValue);
-      }
+    if (spec instanceof JsLongSpec) {
+      return longSchema(spec,
+                        defaultValue);
+    }
+    if (spec instanceof JsLongSuchThat) {
+      return longSchema(spec,
+                        defaultValue);
+    }
 
-      if (spec instanceof JsDoubleSpec) {
-          return doubleSchema(spec,
+    if (spec instanceof JsDoubleSpec) {
+      return doubleSchema(spec,
+                          defaultValue);
+    }
+    if (spec instanceof JsDoubleSuchThat) {
+      return doubleSchema(spec,
+                          defaultValue);
+    }
+
+    if (spec instanceof JsDecimalSpec) {
+      return stringSchema(BIG_DECIMAL_TYPE,
+                          spec.isNullable(),
+                          defaultValue);
+    }
+
+    if (spec instanceof JsDecimalSuchThat) {
+      return stringSchema(BIG_DECIMAL_TYPE,
+                          spec.isNullable(),
+                          defaultValue);
+    }
+
+    if (spec instanceof JsBigIntSpec) {
+      return stringSchema(BIG_INTEGER_TYPE,
+                          spec.isNullable(),
+                          defaultValue
+                         );
+    }
+    if (spec instanceof JsBigIntSuchThat) {
+      return stringSchema(BIG_INTEGER_TYPE,
+                          spec.isNullable(),
+                          defaultValue);
+    }
+
+    if (spec instanceof JsBooleanSpec) {
+      return boolSchema(spec,
+                        defaultValue);
+    }
+    if (spec instanceof JsBinarySpec) {
+      return binarySchema(spec,
+                          defaultValue);
+    }
+    if (spec instanceof JsBinarySuchThat) {
+      return binarySchema(spec,
+                          defaultValue);
+    }
+
+    if (spec instanceof JsFixedBinary fixedBinary) {
+      return fixedSchema(fixedBinary,
+                         defaultValue);
+    }
+
+    if (spec instanceof JsArrayOfStrSuchThat) {
+      return arrayOfStringSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfStr) {
+      return arrayOfStringSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfTestedStr) {
+      return arrayOfStringSchema(spec,
+                                 defaultValue);
+    }
+
+    if (spec instanceof JsArrayOfBigIntSuchThat) {
+      return arrayOfBigIntSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfBigInt) {
+      return arrayOfBigIntSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfTestedBigInt) {
+      return arrayOfBigIntSchema(spec,
+                                 defaultValue);
+    }
+
+    if (spec instanceof JsArrayOfIntSuchThat) {
+      return arrayOfIntSchema(spec,
                               defaultValue);
-      }
-      if (spec instanceof JsDoubleSuchThat) {
-          return doubleSchema(spec,
+    }
+    if (spec instanceof JsArrayOfInt) {
+      return arrayOfIntSchema(spec,
                               defaultValue);
-      }
-
-      if (spec instanceof JsDecimalSpec) {
-          return stringSchema(BIG_DECIMAL_TYPE,
-                              spec.isNullable(),
+    }
+    if (spec instanceof JsArrayOfTestedInt) {
+      return arrayOfIntSchema(spec,
                               defaultValue);
-      }
+    }
 
-      if (spec instanceof JsDecimalSuchThat) {
-          return stringSchema(BIG_DECIMAL_TYPE,
-                              spec.isNullable(),
-                              defaultValue);
-      }
+    if (spec instanceof JsArrayOfDoubleSuchThat) {
+      return arrayOfDoubleSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfDouble) {
+      return arrayOfDoubleSchema(spec,
+                                 defaultValue);
+    }
+    if (spec instanceof JsArrayOfTestedDouble) {
+      return arrayOfDoubleSchema(spec,
+                                 defaultValue);
+    }
 
-      if (spec instanceof JsBigIntSpec) {
-          return stringSchema(BIG_INTEGER_TYPE,
-                              spec.isNullable(),
-                              defaultValue
-                             );
-      }
-      if (spec instanceof JsBigIntSuchThat) {
-          return stringSchema(BIG_INTEGER_TYPE,
-                              spec.isNullable(),
-                              defaultValue);
-      }
-
-      if (spec instanceof JsBooleanSpec) {
-          return boolSchema(spec,
-                            defaultValue);
-      }
-      if (spec instanceof JsBinarySpec) {
-          return binarySchema(spec,
-                              defaultValue);
-      }
-      if (spec instanceof JsBinarySuchThat) {
-          return binarySchema(spec,
-                              defaultValue);
-      }
-
-      if (spec instanceof JsFixedBinary fixedBinary) {
-          return fixedSchema(fixedBinary,
-                             defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfStrSuchThat) {
-          return arrayOfStringSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfStr) {
-          return arrayOfStringSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedStr) {
-          return arrayOfStringSchema(spec,
-                                     defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfBigIntSuchThat) {
-          return arrayOfBigIntSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfBigInt) {
-          return arrayOfBigIntSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedBigInt) {
-          return arrayOfBigIntSchema(spec,
-                                     defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfIntSuchThat) {
-          return arrayOfIntSchema(spec,
-                                  defaultValue);
-      }
-      if (spec instanceof JsArrayOfInt) {
-          return arrayOfIntSchema(spec,
-                                  defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedInt) {
-          return arrayOfIntSchema(spec,
-                                  defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfDoubleSuchThat) {
-          return arrayOfDoubleSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfDouble) {
-          return arrayOfDoubleSchema(spec,
-                                     defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedDouble) {
-          return arrayOfDoubleSchema(spec,
-                                     defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfLongSuchThat) {
-          return arrayOfLongSchema(spec,
-                                   defaultValue);
-      }
-      if (spec instanceof JsArrayOfLong) {
-          return arrayOfLongSchema(spec,
-                                   defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedLong) {
-          return arrayOfLongSchema(spec,
-                                   defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfDecimal) {
-          return arrayOfDecimalSchema(spec,
-                                      defaultValue);
-      }
-      if (spec instanceof JsArrayOfTestedDecimal) {
-          return arrayOfDecimalSchema(spec,
-                                      defaultValue);
-      }
-      if (spec instanceof JsArrayOfDecimalSuchThat) {
-          return arrayOfDecimalSchema(spec,
-                                      defaultValue);
-      }
-
-      if (spec instanceof JsArrayOfBool) {
-          return arrayOfBooleanSchema(spec,
-                                      defaultValue);
-      }
-      if (spec instanceof JsArrayOfBoolSuchThat) {
-          return arrayOfBooleanSchema(spec,
-                                      defaultValue);
-      }
-
-      if (spec instanceof JsInstantSpec) {
-          return instantSchema(spec,
+    if (spec instanceof JsArrayOfLongSuchThat) {
+      return arrayOfLongSchema(spec,
                                defaultValue);
-      }
-      if (spec instanceof JsInstantSuchThat) {
-          return instantSchema(spec,
+    }
+    if (spec instanceof JsArrayOfLong) {
+      return arrayOfLongSchema(spec,
                                defaultValue);
-      }
+    }
+    if (spec instanceof JsArrayOfTestedLong) {
+      return arrayOfLongSchema(spec,
+                               defaultValue);
+    }
 
-      if (spec instanceof JsArrayOfSpec arrayOfSpec) {
-          return arrayOfSpecSchema(arrayOfSpec,
-                                   defaultValue,
-                                   namedSchemaParents);
-      }
-      if (spec instanceof JsObjSpec objSpec) {
-          return objSpecSchema(objSpec,
+    if (spec instanceof JsArrayOfDecimal) {
+      return arrayOfDecimalSchema(spec,
+                                  defaultValue);
+    }
+    if (spec instanceof JsArrayOfTestedDecimal) {
+      return arrayOfDecimalSchema(spec,
+                                  defaultValue);
+    }
+    if (spec instanceof JsArrayOfDecimalSuchThat) {
+      return arrayOfDecimalSchema(spec,
+                                  defaultValue);
+    }
+
+    if (spec instanceof JsArrayOfBool) {
+      return arrayOfBooleanSchema(spec,
+                                  defaultValue);
+    }
+    if (spec instanceof JsArrayOfBoolSuchThat) {
+      return arrayOfBooleanSchema(spec,
+                                  defaultValue);
+    }
+
+    if (spec instanceof JsInstantSpec) {
+      return instantSchema(spec,
+                           defaultValue);
+    }
+    if (spec instanceof JsInstantSuchThat) {
+      return instantSchema(spec,
+                           defaultValue);
+    }
+
+    if (spec instanceof JsArrayOfSpec arrayOfSpec) {
+      return arrayOfSpecSchema(arrayOfSpec,
                                defaultValue,
                                namedSchemaParents);
-      }
+    }
+    if (spec instanceof JsObjSpec objSpec) {
+      return objSpecSchema(objSpec,
+                           defaultValue,
+                           namedSchemaParents);
+    }
 
-      if (spec instanceof JsMapOfInt) {
-          return mapOfIntSchema(spec,
-                                defaultValue);
-      }
-      if (spec instanceof JsMapOfDouble) {
-          return mapOfDoubleSchema(spec,
-                                   defaultValue);
-      }
-      if (spec instanceof JsMapOfLong) {
-          return mapOfLongSchema(spec,
-                                 defaultValue);
-      }
-      if (spec instanceof JsMapOfBool) {
-          return mapOfBoolSchema(spec,
-                                 defaultValue);
-      }
-      if (spec instanceof JsMapOfBigInt) {
-          return mapOfBigIntegerSchema(spec,
-                                       defaultValue);
-      }
-      if (spec instanceof JsMapOfSpec mapOfSpec) {
-          return mapOfSpecSchema(mapOfSpec,
-                                 defaultValue,
-                                 namedSchemaParents);
-      }
-      if (spec instanceof JsMapOfStr) {
-          return mapOfStrSchema(spec,
-                                defaultValue);
-      }
-      if (spec instanceof JsMapOfDec) {
-          return mapOfDecSchema(spec,
-                                defaultValue);
-      }
-      if (spec instanceof JsMapOfBinary) {
-          return mapOfBinarySchema(spec,
-                                   defaultValue);
-      }
-      if (spec instanceof JsMapOfInstant) {
-          return mapOfInstantSchema(spec,
-                                    defaultValue);
-      }
-      if (spec instanceof JsEnum jsEnum) {
-          return enumSchema(jsEnum,
+    if (spec instanceof JsMapOfInt) {
+      return mapOfIntSchema(spec,
                             defaultValue);
-      }
-
-      if (spec instanceof OneOf oneOf) {
-          return oneOfSchema(oneOf,
+    }
+    if (spec instanceof JsMapOfDouble) {
+      return mapOfDoubleSchema(spec,
+                               defaultValue);
+    }
+    if (spec instanceof JsMapOfLong) {
+      return mapOfLongSchema(spec,
+                             defaultValue);
+    }
+    if (spec instanceof JsMapOfBool) {
+      return mapOfBoolSchema(spec,
+                             defaultValue);
+    }
+    if (spec instanceof JsMapOfBigInt) {
+      return mapOfBigIntegerSchema(spec,
+                                   defaultValue);
+    }
+    if (spec instanceof JsMapOfSpec mapOfSpec) {
+      return mapOfSpecSchema(mapOfSpec,
                              defaultValue,
                              namedSchemaParents);
-      }
+    }
+    if (spec instanceof JsMapOfStr) {
+      return mapOfStrSchema(spec,
+                            defaultValue);
+    }
+    if (spec instanceof JsMapOfDec) {
+      return mapOfDecSchema(spec,
+                            defaultValue);
+    }
+    if (spec instanceof JsMapOfBinary) {
+      return mapOfBinarySchema(spec,
+                               defaultValue);
+    }
+    if (spec instanceof JsMapOfInstant) {
+      return mapOfInstantSchema(spec,
+                                defaultValue);
+    }
+    if (spec instanceof JsEnum jsEnum) {
+      return enumSchema(jsEnum,
+                        defaultValue);
+    }
+
+    if (spec instanceof OneOf oneOf) {
+      return oneOfSchema(oneOf,
+                         defaultValue,
+                         namedSchemaParents);
+    }
     if (spec instanceof NamedSpec namedSpec) {
       JsSpec cached = JsSpecCache.get(namedSpec.name);
-        if (cached instanceof JsObjSpec || cached instanceof JsEnum
-            || cached instanceof JsFixedBinary) //only object, enum an fixed can be referenced by name in avro
-        {
-            return namedSchema(namedSpec.name,
-                               namedSpec.isNullable(),
-                               defaultValue);
-        } else {
-            return toJsSchema(cached,
-                              defaultValue,
-                              namedSchemaParents);
-        }
+      if (cached instanceof JsObjSpec || cached instanceof JsEnum
+          || cached instanceof JsFixedBinary) //only object, enum an fixed can be referenced by name in avro
+      {
+        return namedSchema(namedSpec.name,
+                           namedSpec.isNullable(),
+                           defaultValue);
+      } else {
+        return toJsSchema(cached,
+                          defaultValue,
+                          namedSchemaParents);
+      }
     }
 
     throw SpecNotSupportedInAvroException.errorConvertingSpecIntoSchema(spec);
@@ -496,45 +496,45 @@ public final class SpecToSchema {
 
     for (int i = 0; i < specs.size(); i++) {
       JsSpec spec = specs.get(i);
-        if (spec instanceof AvroSpec) {
-            avroSchemas.add(toJsSchema(spec,
-                                       JsNothing.NOTHING,
-                                       new ArrayList<>(namedSchemaParents))); //mutable list! each branch their own list of parents
-        } else {
-            throw SpecNotSupportedInAvroException.errorConvertingOneOfIntoSchema(spec,
-                                                                                 i);
-        }
+      if (spec instanceof AvroSpec) {
+        avroSchemas.add(toJsSchema(spec,
+                                   JsNothing.NOTHING,
+                                   new ArrayList<>(namedSchemaParents))); //mutable list! each branch their own list of parents
+      } else {
+        throw SpecNotSupportedInAvroException.errorConvertingOneOfIntoSchema(spec,
+                                                                             i);
+      }
     }
     JsArray schema = JsArray.ofIterable(avroSchemas);
     validateUnionWithoutDuplicatedTypes(schema);
 
-      if (js.isNullable()) {
-          if (schema.containsValue(NULL_TYPE)) {
-              return schema;
-          } else {
-              return keyDefault.isNull() ? schema.prepend(NULL_TYPE) : schema.append(NULL_TYPE);
-          }
+    if (js.isNullable()) {
+      if (schema.containsValue(NULL_TYPE)) {
+        return schema;
       } else {
-          return schema;
+        return keyDefault.isNull() ? schema.prepend(NULL_TYPE) : schema.append(NULL_TYPE);
       }
+    } else {
+      return schema;
+    }
   }
 
   private static void validateUnionWithoutDuplicatedTypes(JsArray schema) {
-      if (containsEnum(schema) && schema.containsValue(STRING_TYPE)) {
-          throw new SpecToSchemaException(ENUM_TYPE_USELESS);
-      }
-      if (containsFixed(schema) && schema.containsValue(BINARY_TYPE)) {
-          throw new SpecToSchemaException(FIXED_TYPE_USELESS);
-      }
-      if (containsInstant(schema) && schema.containsValue(STRING_TYPE)) {
-          throw new SpecToSchemaException(INSTANT_TYPE_USELESS);
-      }
-      if (containsDecimal(schema) && schema.containsValue(STRING_TYPE)) {
-          throw new SpecToSchemaException(DECIMAL_TYPE_USELESS);
-      }
-      if (containsBigInteger(schema) && schema.containsValue(STRING_TYPE)) {
-          throw new SpecToSchemaException(BIGINTEGER_TYPE_USELESS);
-      }
+    if (containsEnum(schema) && schema.containsValue(STRING_TYPE)) {
+      throw new SpecToSchemaException(ENUM_TYPE_USELESS);
+    }
+    if (containsFixed(schema) && schema.containsValue(BINARY_TYPE)) {
+      throw new SpecToSchemaException(FIXED_TYPE_USELESS);
+    }
+    if (containsInstant(schema) && schema.containsValue(STRING_TYPE)) {
+      throw new SpecToSchemaException(INSTANT_TYPE_USELESS);
+    }
+    if (containsDecimal(schema) && schema.containsValue(STRING_TYPE)) {
+      throw new SpecToSchemaException(DECIMAL_TYPE_USELESS);
+    }
+    if (containsBigInteger(schema) && schema.containsValue(STRING_TYPE)) {
+      throw new SpecToSchemaException(BIGINTEGER_TYPE_USELESS);
+    }
 
     Map<String, Integer> typeCounter = new HashMap<>();
     for (JsValue type : schema) {
@@ -543,13 +543,13 @@ public final class SpecToSchema {
                             (n, i) -> i == null ? 1 : i + 1);
       } else if (type instanceof JsObj objType) {
 
-          var name = objType.getStr(TYPE_FIELD);
-          typeCounter.compute(name,
-                              (n, i) -> i == null ? 1 : i + 1);
+        var name = objType.getStr(TYPE_FIELD);
+        typeCounter.compute(name,
+                            (n, i) -> i == null ? 1 : i + 1);
 
 
       } else {
-          throw new SpecToSchemaException(NESTED_TYPES_NOT_ALLOWED.formatted(type));
+        throw new SpecToSchemaException(NESTED_TYPES_NOT_ALLOWED.formatted(type));
       }
     }
 
@@ -569,9 +569,9 @@ public final class SpecToSchema {
       var isEnum = value.isStr(key -> avrocache.get(key) != null
                                       && avrocache.get(key)
                                                   .getType() == Schema.Type.ENUM);
-        if (isEnum) {
-            return true;
-        }
+      if (isEnum) {
+        return true;
+      }
     }
     return false;
 
@@ -582,9 +582,9 @@ public final class SpecToSchema {
       var isEnum = value.isStr(key -> avrocache.get(key) != null
                                       && avrocache.get(key)
                                                   .getType() == Schema.Type.FIXED);
-        if (isEnum) {
-            return true;
-        }
+      if (isEnum) {
+        return true;
+      }
     }
     return false;
   }
@@ -594,9 +594,9 @@ public final class SpecToSchema {
       var isInstant = value.isObj(obj -> obj.getStr("type")
                                             .equals("string")
                                          && ISO_FORMAT_LOGICAL_TYPE.equals(obj.getStr("logicalType")));
-        if (isInstant) {
-            return true;
-        }
+      if (isInstant) {
+        return true;
+      }
     }
     return false;
   }
@@ -606,9 +606,9 @@ public final class SpecToSchema {
       var isInstant = value.isObj(obj -> obj.getStr("type")
                                             .equals("string")
                                          && BIG_DECIMAL_LOGICAL_TYPE.equals(obj.getStr("logicalType")));
-        if (isInstant) {
-            return true;
-        }
+      if (isInstant) {
+        return true;
+      }
     }
     return false;
   }
@@ -618,9 +618,9 @@ public final class SpecToSchema {
       var isInstant = value.isObj(obj -> obj.getStr("type")
                                             .equals("string")
                                          && BIGINTEGER_LOGICAL_TYPE.equals(obj.getStr("logicalType")));
-        if (isInstant) {
-            return true;
-        }
+      if (isInstant) {
+        return true;
+      }
     }
     return false;
   }
@@ -646,9 +646,9 @@ public final class SpecToSchema {
                                                     List<String> namedSchemaParents
                                                    ) {
     var metadata = objSpec.getMetaData();
-      if (metadata == null) {
-          throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
-      }
+    if (metadata == null) {
+      throw MetadataNotFoundException.errorParsingJsObSpecToSchema();
+    }
     if (avrocache.containsKey(objSpec.metaData.getFullName())
         || namedSchemaParents.contains(metadata.getFullName())//recursive schema! already processed then return the name
     ) {
@@ -662,19 +662,19 @@ public final class SpecToSchema {
     var schema = JsObj.of(NAME_FIELD,
                           JsStr.of(metadata.name()),
                           TYPE_FIELD,
-                          Constants.RECORD_TYPE);
-      if (metadata.namespace() != null) {
-          schema = schema.set(NAMESPACE_FIELD,
-                              JsStr.of(metadata.namespace()));
-      }
-      if (metadata.doc() != null) {
-          schema = schema.set(DOC_FIELD,
-                              JsStr.of(metadata.doc()));
-      }
-      if (metadata.aliases() != null) {
-          schema = schema.set(ALIASES_FIELD,
-                              JsArray.ofStrs(metadata.aliases()));
-      }
+                          AvroConstants.RECORD_TYPE);
+    if (metadata.namespace() != null) {
+      schema = schema.set(NAMESPACE_FIELD,
+                          JsStr.of(metadata.namespace()));
+    }
+    if (metadata.doc() != null) {
+      schema = schema.set(DOC_FIELD,
+                          JsStr.of(metadata.doc()));
+    }
+    if (metadata.aliases() != null) {
+      schema = schema.set(ALIASES_FIELD,
+                          JsArray.ofStrs(metadata.aliases()));
+    }
     var fields = JsArray.empty();
 
     var fieldsDoc = metadata.fieldsDoc();
@@ -702,14 +702,14 @@ public final class SpecToSchema {
       var order = fieldsOrder != null ? fieldsOrder.get(key) : null;
       var aliases = fieldsAliases != null ? fieldsAliases.get(key) : null;
 
-        if (doc != null) {
-            fieldSchema = fieldSchema.set(DOC_FIELD,
-                                          doc);
-        }
-        if (order != null) {
-            fieldSchema = fieldSchema.set(ORDER_FIELD,
-                                          order.name());
-        }
+      if (doc != null) {
+        fieldSchema = fieldSchema.set(DOC_FIELD,
+                                      doc);
+      }
+      if (order != null) {
+        fieldSchema = fieldSchema.set(ORDER_FIELD,
+                                      order.name());
+      }
       if (keyDefault.isNotNothing()) {
         //default value of binary fields must are json strings
         fieldSchema =
@@ -719,10 +719,10 @@ public final class SpecToSchema {
                                                 StandardCharsets.UTF_8)) : keyDefault
                            );
       }
-        if (aliases != null) {
-            fieldSchema = fieldSchema.set(ALIASES_FIELD,
-                                          JsArray.ofStrs(aliases));
-        }
+      if (aliases != null) {
+        fieldSchema = fieldSchema.set(ALIASES_FIELD,
+                                      JsArray.ofStrs(aliases));
+      }
 
       fields = fields.append(fieldSchema);
     }
@@ -740,11 +740,11 @@ public final class SpecToSchema {
 
   private static void cacheSchema(String fullName,
                                   JsObj schema) {
-      if (!avrocache.containsKey(fullName)) {
-          avrocache.put(fullName,
-                        parser.parse(schema.toString())
-                       );
-      }
+    if (!avrocache.containsKey(fullName)) {
+      avrocache.put(fullName,
+                    parser.parse(schema.toString())
+                   );
+    }
   }
 
 
@@ -844,9 +844,9 @@ public final class SpecToSchema {
                                       JsValue keyDefault) {
     return js.isNullable() ?
            (keyDefault.isNull() ?
-            Constants.NULL_BINARY_TYPE :
-            Constants.BINARY_NULL_TYPE
-           ) : Constants.BINARY_TYPE;
+            AvroConstants.NULL_BINARY_TYPE :
+            AvroConstants.BINARY_NULL_TYPE
+           ) : AvroConstants.BINARY_TYPE;
 
   }
 
@@ -876,7 +876,7 @@ public final class SpecToSchema {
            (keyDefault.isNull() ?
             NULL_BOOL_TYPE :
             BOOL_NULL_TYPE
-           ) : Constants.BOOL_TYPE;
+           ) : AvroConstants.BOOL_TYPE;
   }
 
   private static JsValue namedSchema(String name,
@@ -933,7 +933,7 @@ public final class SpecToSchema {
            (keyDefault.isNull() ?
             NULL_INT_TYPE :
             INT_NULL_TYPE
-           ) : Constants.INT_TYPE;
+           ) : AvroConstants.INT_TYPE;
   }
 
   private static JsValue doubleSchema(JsSpec js,
@@ -948,15 +948,15 @@ public final class SpecToSchema {
   private synchronized static JsValue fixedSchema(JsFixedBinary js,
                                                   JsValue defaultValue) {
     var metadata = js.getMetaData();
-      if (metadata == null) {
-          throw MetadataNotFoundException.errorParsingFixedToSchema();
-      }
+    if (metadata == null) {
+      throw MetadataNotFoundException.errorParsingFixedToSchema();
+    }
 
-      if (avrocache.containsKey(metadata.getFullName())) {
-          return namedSchema(metadata.getFullName(),
-                             js.isNullable(),
-                             defaultValue);
-      }
+    if (avrocache.containsKey(metadata.getFullName())) {
+      return namedSchema(metadata.getFullName(),
+                         js.isNullable(),
+                         defaultValue);
+    }
 
     var schema = JsObj.of(NAME_FIELD,
                           JsStr.of(metadata.name()),
@@ -964,20 +964,20 @@ public final class SpecToSchema {
                           FIXED_TYPE,
                           SIZE_FIELD,
                           JsInt.of(js.getSize()));
-      if (metadata.namespace() != null) {
-          schema = schema.set(NAMESPACE_FIELD,
-                              JsStr.of(metadata.namespace()));
-      }
+    if (metadata.namespace() != null) {
+      schema = schema.set(NAMESPACE_FIELD,
+                          JsStr.of(metadata.namespace()));
+    }
 
-      if (metadata.doc() != null) {
-          schema = schema.set(DOC_FIELD,
-                              JsStr.of(metadata.doc()));
-      }
+    if (metadata.doc() != null) {
+      schema = schema.set(DOC_FIELD,
+                          JsStr.of(metadata.doc()));
+    }
 
-      if (metadata.aliases() != null) {
-          schema = schema.set(ALIASES_FIELD,
-                              JsArray.ofStrs(metadata.aliases()));
-      }
+    if (metadata.aliases() != null) {
+      schema = schema.set(ALIASES_FIELD,
+                          JsArray.ofStrs(metadata.aliases()));
+    }
 
     cacheSchema(metadata.getFullName(),
                 schema);
@@ -1151,35 +1151,35 @@ public final class SpecToSchema {
   private synchronized static JsValue enumSchema(JsEnum jsEnum,
                                                  JsValue defaultValue) {
     var metaData = jsEnum.getMetaData();
-      if (metaData == null) {
-          throw MetadataNotFoundException.errorParsingEnumToSchema();
-      }
-      if (avrocache.containsKey(metaData.getFullName())) {
-          return namedSchema(metaData.getFullName(),
-                             jsEnum.isNullable(),
-                             defaultValue);
-      }
+    if (metaData == null) {
+      throw MetadataNotFoundException.errorParsingEnumToSchema();
+    }
+    if (avrocache.containsKey(metaData.getFullName())) {
+      return namedSchema(metaData.getFullName(),
+                         jsEnum.isNullable(),
+                         defaultValue);
+    }
 
     var schema = JsObj.of(TYPE_FIELD,
                           ENUM_TYPE,
                           NAME_FIELD,
                           JsStr.of(metaData.name()));
-      if (metaData.doc() != null) {
-          schema = schema.set(DOC_FIELD,
-                              JsStr.of(metaData.doc()));
-      }
-      if (metaData.namespace() != null) {
-          schema = schema.set(NAMESPACE_FIELD,
-                              JsStr.of(metaData.namespace()));
-      }
-      if (metaData.aliases() != null) {
-          schema = schema.set(ALIASES_FIELD,
-                              JsArray.ofStrs(metaData.aliases()));
-      }
-      if (metaData.defaultSymbol() != null) {
-          schema = schema.set(DEFAULT_FIELD,
-                              JsStr.of(metaData.defaultSymbol()));
-      }
+    if (metaData.doc() != null) {
+      schema = schema.set(DOC_FIELD,
+                          JsStr.of(metaData.doc()));
+    }
+    if (metaData.namespace() != null) {
+      schema = schema.set(NAMESPACE_FIELD,
+                          JsStr.of(metaData.namespace()));
+    }
+    if (metaData.aliases() != null) {
+      schema = schema.set(ALIASES_FIELD,
+                          JsArray.ofStrs(metaData.aliases()));
+    }
+    if (metaData.defaultSymbol() != null) {
+      schema = schema.set(DEFAULT_FIELD,
+                          JsStr.of(metaData.defaultSymbol()));
+    }
     schema = schema.set(SYMBOLS_FIELD,
                         jsEnum.getSymbols());
 

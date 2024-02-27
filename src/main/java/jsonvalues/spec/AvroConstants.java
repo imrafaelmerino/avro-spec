@@ -3,7 +3,7 @@ package jsonvalues.spec;
 import jsonvalues.JsArray;
 import jsonvalues.JsStr;
 
-final class Constants {
+final class AvroConstants {
 
   static final JsArray NULL_STR_TYPE = JsArray.of("null",
                                                   "string");
@@ -60,6 +60,6 @@ final class Constants {
   static final String SYMBOLS_FIELD = "symbols";
   static final JsStr ENUM_TYPE = JsStr.of("enum");
 
-  private Constants() {
+  private AvroConstants() {
   }
 }

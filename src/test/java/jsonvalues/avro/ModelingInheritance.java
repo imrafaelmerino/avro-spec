@@ -10,6 +10,7 @@ import java.util.Map;
 import jsonvalues.JsNull;
 import jsonvalues.JsObj;
 import jsonvalues.JsStr;
+import jsonvalues.JsValue;
 import jsonvalues.gen.JsArrayGen;
 import jsonvalues.gen.JsBoolGen;
 import jsonvalues.gen.JsIntGen;
@@ -19,8 +20,8 @@ import jsonvalues.spec.JsEnumBuilder;
 import jsonvalues.spec.JsObjSpec;
 import jsonvalues.spec.JsObjSpecBuilder;
 import jsonvalues.spec.JsSpecs;
-import jsonvalues.spec.SpecDeserializer;
-import jsonvalues.spec.SpecDeserializerBuilder;
+import jsonvalues.spec.ObjSpecDeserializer;
+import jsonvalues.spec.ObjSpecDeserializerBuilder;
 import jsonvalues.spec.SpecSerializer;
 import jsonvalues.spec.SpecSerializerBuilder;
 import jsonvalues.spec.SpecToSchema;
@@ -145,24 +146,21 @@ public class ModelingInheritance {
 
     SpecSerializer serializer =
         SpecSerializerBuilder.of(peripheralSpec)
-                             .enableDebug("peripheral-serializer")
                              .build();
-    SpecDeserializer deserializer =
-        SpecDeserializerBuilder.of(peripheralSpec,
-                                   peripheralSpec)
-                               .enableDebug("peripheral-deserializer")
-                               .build();
+    ObjSpecDeserializer deserializer =
+        ObjSpecDeserializerBuilder.of(peripheralSpec,
+                                      peripheralSpec)
+                                  .build();
 
     peripheralGen.sample(10)
                  .peek(System.out::println)
                  .forEach(obj -> {
-
                             byte[] serialized = serializer.binaryEncode(obj);
 
                             JsObj a = deserializer.binaryDecode(serialized);
 
                             Assertions.assertEquals(obj,
-                                                    a.filterValues(it -> it.isNotNull()));
+                                                    a.filterValues(JsValue::isNotNull));
 
 
                           }

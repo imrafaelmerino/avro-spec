@@ -1,20 +1,18 @@
 package jsonvalues.spec;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.Objects;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 
 /**
- * Builder class for creating instances of {@link SpecDeserializer}.
+ * Builder class for creating instances of {@link ObjSpecDeserializer}.
  * <p>
  * This builder provides a convenient way to configure and create {@code SpecDeserializer} instances for deserializing
  * JSON values based on reader and writer specifications.
  * </p>
  */
-public final class SpecDeserializerBuilder {
+public final class ObjSpecDeserializerBuilder {
 
   private final JsSpec readerSpec;
   private final JsSpec writerSpec;
@@ -22,12 +20,9 @@ public final class SpecDeserializerBuilder {
   private DecoderFactory decoderFactory = DecoderFactory.get();
   private BinaryDecoder reusedDecoder;
 
-  private boolean enableDebug = false;
-  private String deserializerName;
 
-
-  private SpecDeserializerBuilder(JsSpec readerSpec,
-                                  JsSpec writerSpec) {
+  private ObjSpecDeserializerBuilder(JsSpec readerSpec,
+                                     JsSpec writerSpec) {
     this.readerSpec = Objects.requireNonNull(readerSpec);
     this.writerSpec = Objects.requireNonNull(writerSpec);
   }
@@ -39,10 +34,10 @@ public final class SpecDeserializerBuilder {
    * @param writerSpec The specification for writing JSON values.
    * @return A new instance of {@code SpecDeserializerBuilder}.
    */
-  public static SpecDeserializerBuilder of(JsSpec readerSpec,
-                                           JsSpec writerSpec) {
-    return new SpecDeserializerBuilder(readerSpec,
-                                       writerSpec);
+  public static ObjSpecDeserializerBuilder of(JsSpec readerSpec,
+                                              JsSpec writerSpec) {
+    return new ObjSpecDeserializerBuilder(readerSpec,
+                                          writerSpec);
   }
 
   /**
@@ -53,9 +48,9 @@ public final class SpecDeserializerBuilder {
    * @return A new instance of {@code SpecDeserializerBuilder}.
    * @see #of(JsSpec, JsSpec)
    */
-  public static SpecDeserializerBuilder of(JsSpec spec) {
-    return new SpecDeserializerBuilder(spec,
-                                       spec);
+  public static ObjSpecDeserializerBuilder of(JsSpec spec) {
+    return new ObjSpecDeserializerBuilder(spec,
+                                          spec);
   }
 
   /**
@@ -64,7 +59,7 @@ public final class SpecDeserializerBuilder {
    * @param reusedRecord The reused {@link GenericRecord} for deserialization.
    * @return This builder instance.
    */
-  public SpecDeserializerBuilder withReusedRecord(GenericRecord reusedRecord) {
+  public ObjSpecDeserializerBuilder withReusedRecord(GenericRecord reusedRecord) {
     this.reusedRecord = Objects.requireNonNull(reusedRecord);
     return this;
   }
@@ -75,7 +70,7 @@ public final class SpecDeserializerBuilder {
    * @param decoderFactory The {@code DecoderFactory} to be used for decoding.
    * @return This builder instance.
    */
-  public SpecDeserializerBuilder withDecoderFactory(DecoderFactory decoderFactory) {
+  public ObjSpecDeserializerBuilder withDecoderFactory(DecoderFactory decoderFactory) {
     this.decoderFactory = Objects.requireNonNull(decoderFactory);
     return this;
   }
@@ -86,38 +81,22 @@ public final class SpecDeserializerBuilder {
    * @param reusedDecoder The reused {@link BinaryDecoder} for deserialization.
    * @return This builder instance.
    */
-  public SpecDeserializerBuilder withReusedDecoder(BinaryDecoder reusedDecoder) {
+  public ObjSpecDeserializerBuilder withReusedDecoder(BinaryDecoder reusedDecoder) {
     this.reusedDecoder = Objects.requireNonNull(reusedDecoder);
     return this;
   }
 
-  /**
-   * Enables debugging for Avro Spec Deserialization by capturing Java Flight Recorder (JFR) events. When debug mode is
-   * enabled, the library generates events using the {@link SpecDeserializerEvent} class, providing insights into the
-   * deserialization process. The specified deserializer name is used to identify the events and distinguish between
-   * different deserialization processes.
-   *
-   * @param deserializerName The name to identify the deserializer in JFR events.
-   * @return The updated {@link SpecDeserializerBuilder} instance with debugging enabled.
-   */
-  public SpecDeserializerBuilder enableDebug(final String deserializerName) {
-    this.enableDebug = true;
-    this.deserializerName = requireNonNull(deserializerName);
-    return this;
-  }
 
   /**
-   * Builds and returns a new instance of {@link SpecDeserializer} based on the configured settings.
+   * Builds and returns a new instance of {@link ObjSpecDeserializer} based on the configured settings.
    *
    * @return A new instance of {@code SpecDeserializer}.
    */
-  public SpecDeserializer build() {
-    return new SpecDeserializer(deserializerName,
-                                readerSpec,
-                                writerSpec,
-                                reusedRecord,
-                                decoderFactory,
-                                reusedDecoder,
-                                enableDebug);
+  public ObjSpecDeserializer build() {
+    return new ObjSpecDeserializer(readerSpec,
+                                   writerSpec,
+                                   reusedRecord,
+                                   decoderFactory,
+                                   reusedDecoder);
   }
 }

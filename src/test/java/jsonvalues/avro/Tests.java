@@ -34,14 +34,12 @@ import fun.gen.Combinators;
 import fun.gen.Gen;
 import fun.gen.StrGen;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jio.test.junit.Debugger;
 import jio.test.pbt.PropBuilder;
 import jio.test.pbt.TestFailure;
 import jio.test.pbt.TestResult;
@@ -75,8 +73,8 @@ import jsonvalues.spec.JsObjSpecBuilder;
 import jsonvalues.spec.JsObjSpecParser;
 import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsonToAvro;
-import jsonvalues.spec.SpecDeserializer;
-import jsonvalues.spec.SpecDeserializerBuilder;
+import jsonvalues.spec.ObjSpecDeserializer;
+import jsonvalues.spec.ObjSpecDeserializerBuilder;
 import jsonvalues.spec.SpecSerializer;
 import jsonvalues.spec.SpecSerializerBuilder;
 import jsonvalues.spec.SpecToSchema;
@@ -85,13 +83,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 
 public class Tests {
 
-  @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(2));
   Supplier<String> nameGen = StrGen.alphabetic(10,
                                                20)
                                    .sample();
@@ -176,14 +171,14 @@ public class Tests {
                                 Map<String, JsValue> defaults) {
     System.out.println(input);
     System.out.println(deserialized);
-      if (defaults.isEmpty()) {
-          return input.equals(deserialized);
-      }
+    if (defaults.isEmpty()) {
+      return input.equals(deserialized);
+    }
     var xs = deserialized.filterKeys((path, value) -> path.size() != 1 || input.containsKey(path.head()
                                                                                                 .asKey().name));
-      if (!xs.equals(input)) {
-          return false;
-      }
+    if (!xs.equals(input)) {
+      return false;
+    }
     var ys = deserialized.filterKeys((path, value) -> path.size() != 1 || !input.containsKey(path.head()
                                                                                                  .asKey().name));
     return ys.keySet()
@@ -209,13 +204,11 @@ public class Tests {
 
     SpecSerializer serializer =
         SpecSerializerBuilder.of(spec)
-                             .enableDebug("person-serializer")
                              .build();
-    SpecDeserializer deserializer =
-        SpecDeserializerBuilder.of(spec,
-                                   spec)
-                               .enableDebug("person-deserializer")
-                               .build();
+    ObjSpecDeserializer deserializer =
+        ObjSpecDeserializerBuilder.of(spec,
+                                      spec)
+                                  .build();
 
     Assertions.assertTrue(equals(expected,
                                  deserializer.binaryDecode(serializer.binaryEncode(input)),
@@ -1349,8 +1342,8 @@ public class Tests {
 
     SpecSerializer serializer = SpecSerializerBuilder.of(recordSpec)
                                                      .build();
-    SpecDeserializer deserializer = SpecDeserializerBuilder.of(recordSpec)
-                                                           .build();
+    ObjSpecDeserializer deserializer = ObjSpecDeserializerBuilder.of(recordSpec)
+                                                                 .build();
 
     Function<JsObj, TestResult> fun = obj -> {
       JsObj xs = deserializer.binaryDecode(serializer.binaryEncode(obj));

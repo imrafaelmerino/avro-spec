@@ -99,10 +99,10 @@ public final class AvroToJson {
       Schema elementType = requireNonNull(genericArray)
           .getSchema()
           .getElementType();
-        for (Object item : genericArray) {
-            array = array.append(toJsValue(item,
-                                           elementType));
-        }
+      for (Object item : genericArray) {
+        array = array.append(toJsValue(item,
+                                       elementType));
+      }
       return array;
     } catch (SpecNotSupportedInAvroException | AvroToJsonException | MetadataNotFoundException
              | SpecToSchemaException e) {
@@ -141,7 +141,7 @@ public final class AvroToJson {
         return toJsValue(value,
                          schema);
       } catch (Exception e) {
-        DebugUtils.debugNonNull(e);
+        DebuggerUtils.debugNonNull(e);
       }
     }
     throw new AvroToJsonException(UNRESOLVABLE_UNION);
@@ -153,33 +153,33 @@ public final class AvroToJson {
     var type = schema.getType();
 
     //important to check at the very first if it's a union
-      if (type == Schema.Type.UNION) {
-          return fromUnionToJsValue(value,
-                                    schema.getTypes());
-      }
+    if (type == Schema.Type.UNION) {
+      return fromUnionToJsValue(value,
+                                schema.getTypes());
+    }
 
     if (type == Schema.Type.NULL) {
-        if (value == null) {
-            return JsNull.NULL;
-        } else {
-            throw new AvroToJsonException(NULL_EXPECTED);
-        }
+      if (value == null) {
+        return JsNull.NULL;
+      } else {
+        throw new AvroToJsonException(NULL_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.BYTES) {
-        if (value instanceof ByteBuffer bf) {
-            return JsBinary.of(bf.array());
-        } else {
-            throw new AvroToJsonException(BYTE_ARRAY_EXPECTED_FOR_BYTES);
-        }
+      if (value instanceof ByteBuffer bf) {
+        return JsBinary.of(bf.array());
+      } else {
+        throw new AvroToJsonException(BYTE_ARRAY_EXPECTED_FOR_BYTES);
+      }
     }
 
     if (type == Schema.Type.BOOLEAN) {
-        if (value instanceof Boolean) {
-            return JsBool.of((Boolean) value);
-        } else {
-            throw new AvroToJsonException(BOOLEAN_EXPECTED);
-        }
+      if (value instanceof Boolean) {
+        return JsBool.of((Boolean) value);
+      } else {
+        throw new AvroToJsonException(BOOLEAN_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.STRING) {
@@ -188,15 +188,15 @@ public final class AvroToJson {
         LogicalType logicalType = schema.getLogicalType();
         if (logicalType != null) {
           String name = logicalType.getName();
-            if (name.equals(BIG_DECIMAL_LOGICAL_TYPE)) {
-                return JsBigDec.of(new BigDecimal(value.toString()));
-            }
-            if (name.equals(BIGINTEGER_LOGICAL_TYPE)) {
-                return JsBigInt.of(new BigInteger(value.toString()));
-            }
-            if (name.equals(ISO_FORMAT_LOGICAL_TYPE)) {
-                return JsInstant.of(value.toString());
-            }
+          if (name.equals(BIG_DECIMAL_LOGICAL_TYPE)) {
+            return JsBigDec.of(new BigDecimal(value.toString()));
+          }
+          if (name.equals(BIGINTEGER_LOGICAL_TYPE)) {
+            return JsBigInt.of(new BigInteger(value.toString()));
+          }
+          if (name.equals(ISO_FORMAT_LOGICAL_TYPE)) {
+            return JsInstant.of(value.toString());
+          }
         }
         return JsStr.of(value.toString());
       } else {
@@ -204,69 +204,69 @@ public final class AvroToJson {
       }
     }
     if (type == Schema.Type.ENUM) {
-        if (value instanceof GenericData.EnumSymbol symbol) {
-            return JsStr.of(requireNonNull(symbol).toString());
-        } else {
-            throw new AvroToJsonException(CHAR_SEQ_EXPECTED_FOR_ENUM_TYPE);
-        }
+      if (value instanceof GenericData.EnumSymbol symbol) {
+        return JsStr.of(requireNonNull(symbol).toString());
+      } else {
+        throw new AvroToJsonException(CHAR_SEQ_EXPECTED_FOR_ENUM_TYPE);
+      }
     }
 
     if (type == Schema.Type.INT) {
-        if (value instanceof Integer) {
-            return JsInt.of((int) value);
-        } else {
-            throw new AvroToJsonException(INT_EXPECTED);
-        }
+      if (value instanceof Integer) {
+        return JsInt.of((int) value);
+      } else {
+        throw new AvroToJsonException(INT_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.LONG) {
-        if (value instanceof Long) {
-            return JsLong.of((long) value);
-        } else {
-            throw new AvroToJsonException(LONG_EXPECTED);
-        }
+      if (value instanceof Long) {
+        return JsLong.of((long) value);
+      } else {
+        throw new AvroToJsonException(LONG_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.DOUBLE || type == Schema.Type.FLOAT) {
-        if (value instanceof Number) {
-            return JsDouble.of(((Number) value).doubleValue());
-        } else {
-            throw new AvroToJsonException(NUMBER_EXPECTED);
-        }
+      if (value instanceof Number) {
+        return JsDouble.of(((Number) value).doubleValue());
+      } else {
+        throw new AvroToJsonException(NUMBER_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.FIXED) {
-        if (value instanceof GenericData.Fixed fixed) {
-            return JsBinary.of(requireNonNull(fixed).bytes());
-        } else {
-            throw new AvroToJsonException(BYTE_ARRAY_EXPECTED_FOR_FIXED_TYPE);
-        }
+      if (value instanceof GenericData.Fixed fixed) {
+        return JsBinary.of(requireNonNull(fixed).bytes());
+      } else {
+        throw new AvroToJsonException(BYTE_ARRAY_EXPECTED_FOR_FIXED_TYPE);
+      }
 
     }
 
     if (type == Schema.Type.RECORD) {
-        if (value instanceof GenericRecord) {
-            return toJsObj((GenericRecord) value);
-        } else {
-            throw new AvroToJsonException(RECORD_EXPECTED);
-        }
+      if (value instanceof GenericRecord) {
+        return toJsObj((GenericRecord) value);
+      } else {
+        throw new AvroToJsonException(RECORD_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.ARRAY) {
-        if (value instanceof GenericArray<?>) {
-            return toJsArray((GenericArray<?>) value);
-        } else {
-            throw new AvroToJsonException(ARRAY_EXPECTED);
-        }
+      if (value instanceof GenericArray<?>) {
+        return toJsArray((GenericArray<?>) value);
+      } else {
+        throw new AvroToJsonException(ARRAY_EXPECTED);
+      }
     }
 
     if (type == Schema.Type.MAP) {
-        if (value instanceof Map) {
-            return toJsObj(((Map<?, ?>) value),
-                           schema);
-        } else {
-            throw new AvroToJsonException(MAP_EXPECTED);
-        }
+      if (value instanceof Map) {
+        return toJsObj(((Map<?, ?>) value),
+                       schema);
+      } else {
+        throw new AvroToJsonException(MAP_EXPECTED);
+      }
     }
     throw new AvroToJsonException(TYPE_NOT_SUPPORTED.formatted(type.getName()));
   }

@@ -19,7 +19,9 @@ import jsonvalues.JsNull;
 import jsonvalues.JsObj;
 import jsonvalues.JsStr;
 import jsonvalues.JsValue;
+import jsonvalues.Json;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Fixed;
@@ -42,6 +44,20 @@ public final class JsonToAvro {
   private JsonToAvro() {
   }
 
+  public static GenericContainer toAvro(Json<?> json,
+                                        JsSpec spec) {
+    GenericContainer record = null;
+    if (json instanceof JsObj obj) {
+      record = JsonToAvro.toAvro(obj,
+                                 spec);
+    } else if (json instanceof JsArray array) {
+      record = JsonToAvro.toAvro(array,
+                                 spec);
+    }
+    return record;
+
+  }
+
   /**
    * Converts a JsArray to Avro data based on the provided JsArraySpec.
    *
@@ -62,7 +78,7 @@ public final class JsonToAvro {
 
       var schema = SpecToSchema.convert(spec);
 
-      assert DebugUtils.debugNonNull(schema);
+      assert DebuggerUtils.debugNonNull(schema);
 
       return toAvro(arr,
                     schema);
@@ -93,7 +109,7 @@ public final class JsonToAvro {
 
       var schema = SpecToSchema.convert(spec);
 
-      assert DebugUtils.debugNonNull(schema);
+      assert DebuggerUtils.debugNonNull(schema);
 
       var record = toRecord(obj,
                             schema);
@@ -131,12 +147,12 @@ public final class JsonToAvro {
       var arrSchema = getArrayType(schema);
       var avroArray = new GenericData.Array<>(jsArray.size(),
                                               arrSchema);
-        for (int i = 0; i < jsArray.size(); i++) {
-            avroArray.add(i,
-                          toAvro(jsArray.get(i),
-                                 arrSchema.getElementType()
-                                ));
-        }
+      for (int i = 0; i < jsArray.size(); i++) {
+        avroArray.add(i,
+                      toAvro(jsArray.get(i),
+                             arrSchema.getElementType()
+                            ));
+      }
       assert GenericData.get()
                         .validate(schema,
                                   avroArray) : "Avro `validate` methods fails validating the Array `%s` against the schema `%s`".formatted(avroArray,
@@ -174,25 +190,25 @@ public final class JsonToAvro {
                        final Schema schema
                       ) {
 
-      if (schema.getType() == Schema.Type.MAP) {
-          return toMap(obj,
-                       schema);
-      } else if (schema.getType() == Schema.Type.RECORD) {
-          return toRecord(obj,
-                          schema);
-      } else if (schema.isUnion()) {
-          for (Schema type : schema.getTypes()) {
-              try {
-                  return toAvro(obj,
-                                type);
-              } catch (Exception e) {
-                  DebugUtils.debugNonNull(e);
-              }
-          }
-          throw JsonToAvroException.unresolvableUnion(schema);
-      } else {
-          throw JsonToAvroException.invalidRecordSchema(schema.getType());
+    if (schema.getType() == Schema.Type.MAP) {
+      return toMap(obj,
+                   schema);
+    } else if (schema.getType() == Schema.Type.RECORD) {
+      return toRecord(obj,
+                      schema);
+    } else if (schema.isUnion()) {
+      for (Schema type : schema.getTypes()) {
+        try {
+          return toAvro(obj,
+                        type);
+        } catch (Exception e) {
+          DebuggerUtils.debugNonNull(e);
+        }
       }
+      throw JsonToAvroException.unresolvableUnion(schema);
+    } else {
+      throw JsonToAvroException.invalidRecordSchema(schema.getType());
+    }
   }
 
 
@@ -209,17 +225,17 @@ public final class JsonToAvro {
       List<Schema> recordSchemas = getAllType(schema,
                                               Schema.Type.RECORD);
 
-        if (recordSchemas.size() == 1) {
-            return buildRecord(obj,
-                               recordSchemas.get(0));
-        }
+      if (recordSchemas.size() == 1) {
+        return buildRecord(obj,
+                           recordSchemas.get(0));
+      }
       //it's an union, test every schema and if none of them is valid, throw exception `SCHEMA_INVALID`
       for (Schema recordSchema : recordSchemas) {
         try {
           return buildRecord(obj,
                              recordSchema);
         } catch (Exception e) {
-          assert DebugUtils.debugNonNull(e);
+          assert DebuggerUtils.debugNonNull(e);
         }
 
       }
@@ -240,21 +256,21 @@ public final class JsonToAvro {
       //iterar otra vez con los alias, puede que exista en un alias,
       //en ese caso leer el valor pero asociado al field
       JsValue value = obj.get(field.name());
-        if (value.isNothing()) {
-            value = tryWithAliases(field.aliases(),
-                                   obj);
-            if (value.isNotNothing()) {
-                builder.set(field,
-                            toAvro(value,
-                                   field.schema()));
-            } else if (!field.hasDefaultValue()) {
-                throw new JsonToAvroException(FIELD_VALUE_NOT_FOUND.formatted(field.name()));
-            }
-        } else {
-            builder.set(field,
-                        toAvro(value,
-                               field.schema()));
+      if (value.isNothing()) {
+        value = tryWithAliases(field.aliases(),
+                               obj);
+        if (value.isNotNothing()) {
+          builder.set(field,
+                      toAvro(value,
+                             field.schema()));
+        } else if (!field.hasDefaultValue()) {
+          throw new JsonToAvroException(FIELD_VALUE_NOT_FOUND.formatted(field.name()));
         }
+      } else {
+        builder.set(field,
+                    toAvro(value,
+                           field.schema()));
+      }
     }
     return builder.build();
   }
@@ -263,9 +279,9 @@ public final class JsonToAvro {
                                         JsObj obj) {
     for (String alias : aliases) {
       JsValue value = obj.get(alias);
-        if (value.isNotNothing()) {
-            return value;
-        }
+      if (value.isNotNothing()) {
+        return value;
+      }
     }
     return JsNothing.NOTHING;
   }
@@ -273,77 +289,77 @@ public final class JsonToAvro {
 
   static Object toAvro(JsValue value,
                        Schema schema) {
-      if (value instanceof JsStr js) {
-          return toAvroStr(schema,
-                           js);
-      }
-      if (value instanceof JsInt js) {
-          return js.value;
-      }
-      if (value instanceof JsLong js) {
-          return js.value;
-      }
-      if (value instanceof JsBigDec js) {
-          return js.toString();
-      }
-      if (value instanceof JsBigInt js) {
-          return js.toString();
-      }
-      if (value instanceof JsDouble js) {
-          return js.value;
-      }
-      if (value instanceof JsInstant js) {
-          return js.value.toString();
-      }
-      if (value instanceof JsBool js) {
-          return js.value;
-      }
-      if (value instanceof JsNull) {
-          return null;
-      }
-      if (value instanceof JsBinary js) {
-          return toAvroBinary(schema,
-                              js);
-      }
-      if (value instanceof JsObj js) {
-          return toAvro(js,
-                        schema);
-      }
-      if (value instanceof JsArray js) {
-          return toAvro(js,
-                        schema);
-      }
+    if (value instanceof JsStr js) {
+      return toAvroStr(schema,
+                       js);
+    }
+    if (value instanceof JsInt js) {
+      return js.value;
+    }
+    if (value instanceof JsLong js) {
+      return js.value;
+    }
+    if (value instanceof JsBigDec js) {
+      return js.toString();
+    }
+    if (value instanceof JsBigInt js) {
+      return js.toString();
+    }
+    if (value instanceof JsDouble js) {
+      return js.value;
+    }
+    if (value instanceof JsInstant js) {
+      return js.value.toString();
+    }
+    if (value instanceof JsBool js) {
+      return js.value;
+    }
+    if (value instanceof JsNull) {
+      return null;
+    }
+    if (value instanceof JsBinary js) {
+      return toAvroBinary(schema,
+                          js);
+    }
+    if (value instanceof JsObj js) {
+      return toAvro(js,
+                    schema);
+    }
+    if (value instanceof JsArray js) {
+      return toAvro(js,
+                    schema);
+    }
     throw new JsonToAvroException(JS_VALUE_TYPE_NOT_SUPPORTED.formatted(value.getClass()
                                                                              .getName()));
   }
 
   private static Comparable<? extends Comparable<?>> toAvroStr(Schema schema,
                                                                JsStr js) {
-      if (schema.getType() == Schema.Type.ENUM ||
-          (schema.getType() == Schema.Type.UNION && unionContain(schema,
-                                                                 Schema.Type.ENUM))) {
-          return new EnumSymbol(getEnumType(schema,
-                                            js.value),
-                                js.value);
-      } else {
-          return js.value;
-      }
+    if (schema.getType() == Schema.Type.ENUM ||
+        (schema.getType() == Schema.Type.UNION && unionContain(schema,
+                                                               Schema.Type.ENUM))) {
+      return new EnumSymbol(getEnumType(schema,
+                                        js.value),
+                            js.value);
+    } else {
+      return js.value;
+    }
   }
 
   private static Comparable<? extends Comparable<?>> toAvroBinary(Schema schema,
                                                                   JsBinary js) {
-      if (schema.getType() == Schema.Type.FIXED
-          || (schema.getType() == Schema.Type.UNION
-              && unionContain(schema,
-                              Schema.Type.FIXED))) {
-          Schema fixedType = getFixedType(schema,
-                                          js.value.length);
+    if (schema.getType() == Schema.Type.FIXED
+        || (schema.getType() == Schema.Type.UNION
+            && unionContain(schema,
+                            Schema.Type.FIXED))) {
+      Schema fixedType = getFixedType(schema,
+                                      js.value.length);
 
-          return new Fixed(fixedType,
-                           js.value);
-      } else {
-          return ByteBuffer.wrap(js.value);
-      }
+      return new Fixed(fixedType,
+                       js.value);
+    } else {
+      return ByteBuffer.wrap(js.value);
+    }
   }
 
   private static Schema getEnumType(Schema schema,
@@ -371,9 +387,9 @@ public final class JsonToAvro {
 
 
   private static Schema getArrayType(Schema schema) {
-      if (schema.getType() == Schema.Type.ARRAY) {
-          return schema;
-      }
+    if (schema.getType() == Schema.Type.ARRAY) {
+      return schema;
+    }
     return schema
         .getTypes()
         .stream()
@@ -384,9 +400,9 @@ public final class JsonToAvro {
 
   private static List<Schema> getAllType(Schema schema,
                                          Schema.Type type) {
-      if (schema.getType() == type) {
-          return List.of(schema);
-      }
+    if (schema.getType() == type) {
+      return List.of(schema);
+    }
     return schema
         .getTypes()
         .stream()
