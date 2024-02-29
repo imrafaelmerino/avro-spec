@@ -27,9 +27,13 @@ public abstract class KafkaAvroSpecObjDeserializer implements Deserializer<JsObj
       var event = new KafkaDeserializerEvent();
       event.begin();
       try {
-        var result = specDeserializer.binaryDecode(data);
+        var json = specDeserializer.binaryDecode(data);
+        assert specDeserializer.readerSpec.test(json)
+                                          .isEmpty() :
+            "The json object doesn't conform the spec. Errors: %s".formatted(specDeserializer.readerSpec.test(json));
+
         event.result = KafkaDeserializerEvent.RESULT.SUCCESS.name();
-        return result;
+        return json;
       } catch (Exception e) {
         event.result = KafkaDeserializerEvent.RESULT.FAILURE.name();
         event.exception = DebuggerUtils.findUltimateCause(e)

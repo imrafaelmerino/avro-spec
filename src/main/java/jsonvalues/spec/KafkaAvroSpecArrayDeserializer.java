@@ -26,9 +26,13 @@ public abstract class KafkaAvroSpecArrayDeserializer implements Deserializer<JsA
       var event = new KafkaDeserializerEvent();
       event.begin();
       try {
-        var result = specDeserializer.binaryDecode(data);
+        var array = specDeserializer.binaryDecode(data);
+        assert specDeserializer.readerSpec.test(array)
+                                          .isEmpty() :
+            "The json array doesn't conform the spec. Errors: %s".formatted(specDeserializer.readerSpec.test(array));
+
         event.result = KafkaDeserializerEvent.RESULT.SUCCESS.name();
-        return result;
+        return array;
       } catch (Exception e) {
         event.result = KafkaDeserializerEvent.RESULT.FAILURE.name();
         event.exception = DebuggerUtils.findUltimateCause(e)

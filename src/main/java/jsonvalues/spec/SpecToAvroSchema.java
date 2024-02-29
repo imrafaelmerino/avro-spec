@@ -60,7 +60,7 @@ import org.apache.avro.Schema;
  * This class provides functionality to convert JSON specifications (jsonvalues.spec) into Avro schemas. It includes
  * methods for converting JsObjSpec and JsArraySpec into Avro schemas.
  */
-public final class SpecToSchema {
+public final class SpecToAvroSchema {
 
   static final String BIG_DECIMAL_LOGICAL_TYPE = "bigdecimal";
   static final String BIGINTEGER_LOGICAL_TYPE = "biginteger";
@@ -123,7 +123,7 @@ public final class SpecToSchema {
   }
 
 
-  private SpecToSchema() {
+  private SpecToAvroSchema() {
   }
 
   /**

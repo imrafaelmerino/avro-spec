@@ -76,7 +76,7 @@ public final class JsonToAvro {
                  .isEmpty() :
           "The JsArray doesn't conform the spec. Errors: %s".formatted(spec.test(arr));
 
-      var schema = SpecToSchema.convert(spec);
+      var schema = SpecToAvroSchema.convert(spec);
 
       assert DebuggerUtils.debugNonNull(schema);
 
@@ -107,7 +107,7 @@ public final class JsonToAvro {
       assert spec.test(obj)
                  .isEmpty() : "The JsObj doesn't conform the spec. Errors: %s".formatted(spec.test(obj));
 
-      var schema = SpecToSchema.convert(spec);
+      var schema = SpecToAvroSchema.convert(spec);
 
       assert DebuggerUtils.debugNonNull(schema);
 

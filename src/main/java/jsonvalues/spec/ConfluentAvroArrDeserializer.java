@@ -25,7 +25,7 @@ public abstract class ConfluentAvroArrDeserializer extends AbstractKafkaAvroDese
    * Constructor used by Kafka consumer.
    */
   public ConfluentAvroArrDeserializer() {
-    schema = SpecToSchema.convert(Objects.requireNonNull(getSpec()));
+    schema = SpecToAvroSchema.convert(Objects.requireNonNull(getSpec()));
   }
 
   public ConfluentAvroArrDeserializer(SchemaRegistryClient client) {
@@ -75,11 +75,14 @@ public abstract class ConfluentAvroArrDeserializer extends AbstractKafkaAvroDese
       var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
-        var result = deserializeToArray(topic,
-                                        headers,
-                                        bytes);
+        var array = deserializeToArray(topic,
+                                       headers,
+                                       bytes);
+        assert getSpec().test(array)
+                        .isEmpty() :
+            "The json array doesn't conform the spec. Errors: %s".formatted(getSpec().test(array));
         event.result = ConfluentDeserializerEvent.RESULT.SUCCESS.name();
-        return result;
+        return array;
       } catch (Exception e) {
         event.result = ConfluentDeserializerEvent.RESULT.FAILURE.name();
         event.exception = DebuggerUtils.findUltimateCause(e)
@@ -89,7 +92,8 @@ public abstract class ConfluentAvroArrDeserializer extends AbstractKafkaAvroDese
         event.end();
         if (event.shouldCommit()) {
           event.topic = topic;
-          event.schema = schema.getElementType().getFullName();
+          event.schema = schema.getElementType()
+                               .getFullName();
           event.counter = Counters.deserializerCounter.incrementAndGet();
           event.commit();
         }
@@ -112,6 +116,7 @@ public abstract class ConfluentAvroArrDeserializer extends AbstractKafkaAvroDese
                                       headers,
                                       Objects.requireNonNull(bytes),
                                       schema);
+
     return AvroToJson.toJsArray(array);
   }
 

@@ -1,6 +1,6 @@
 package jsonvalues.spec;
 
-import static jsonvalues.spec.AvroUtils.isRecordSchema;
+import static jsonvalues.spec.AvroFun.isRecordSchema;
 
 import java.nio.charset.StandardCharsets;
 import jsonvalues.JsObj;
@@ -46,8 +46,8 @@ public final class ObjSpecDeserializer {
     this.reusedRecord = reusedRecord;
     this.decoderFactory = decoderFactory;
     this.reusedDecoder = reusedDecoder;
-    this.readerSchema = SpecToSchema.convert(readerSpec);
-    this.writerSchema = SpecToSchema.convert(writerSpec);
+    this.readerSchema = SpecToAvroSchema.convert(readerSpec);
+    this.writerSchema = SpecToAvroSchema.convert(writerSpec);
     if (!isRecordSchema(readerSchema)) {
       throw SpecDeserializerException.invalidSpecForRecords();
     }

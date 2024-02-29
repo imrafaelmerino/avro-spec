@@ -2,7 +2,7 @@ package jsonvalues.spec;
 
 import org.apache.avro.Schema;
 
-class AvroUtils {
+class AvroFun {
 
   static boolean isRecordSchema(Schema schema) {
     return schema.getType() == Schema.Type.RECORD

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import jsonvalues.JsObj;
-import jsonvalues.spec.ConfluentSerializerEvent.RESULT;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
@@ -23,7 +22,7 @@ public abstract class ConfluentAvroObjDeserializer extends AbstractKafkaAvroDese
 
 
   public ConfluentAvroObjDeserializer() {
-    schema = SpecToSchema.convert(Objects.requireNonNull(getSpec()));
+    schema = SpecToAvroSchema.convert(Objects.requireNonNull(getSpec()));
   }
 
   public ConfluentAvroObjDeserializer(SchemaRegistryClient client) {
@@ -76,11 +75,14 @@ public abstract class ConfluentAvroObjDeserializer extends AbstractKafkaAvroDese
       var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
-        var result = deserializeToObj(topic,
+        var json = deserializeToObj(topic,
                                       headers,
                                       bytes);
         event.result = ConfluentDeserializerEvent.RESULT.SUCCESS.name();
-        return result;
+        assert getSpec().test(json)
+                        .isEmpty() :
+            "The json object doesn't conform the spec. Errors: %s".formatted(getSpec().test(json));
+        return json;
       } catch (Exception e) {
         event.result = ConfluentDeserializerEvent.RESULT.FAILURE.name();
         event.exception = DebuggerUtils.findUltimateCause(e)

@@ -24,8 +24,8 @@ public abstract class ConfluentJsonSchemaSerializer extends
   protected abstract boolean isJFREnabled();
 
   public ConfluentJsonSchemaSerializer() {
-    schema = new JsonSchema(SpecToSchema.convert(Objects.requireNonNull(getSpec()))
-                                        .toString());
+    schema = new JsonSchema(SpecToAvroSchema.convert(Objects.requireNonNull(getSpec()))
+                                            .toString());
   }
 
   public ConfluentJsonSchemaSerializer(SchemaRegistryClient client) {
@@ -61,12 +61,15 @@ public abstract class ConfluentJsonSchemaSerializer extends
   public byte[] serialize(String topic,
                           Headers headers,
                           Json<?> json) {
+    assert getSpec().test(Objects.requireNonNull(json))
+                    .isEmpty() :
+        "The json object doesn't conform the spec. Errors: %s".formatted(getSpec().test(json));
 
     if (isJFREnabled()) {
       var event = new ConfluentSerializerEvent();
       event.begin();
       try {
-        var result = serializeJson(topic,
+        var result = serializeJson(Objects.requireNonNull(topic),
                                    headers,
                                    json);
         event.result = RESULT.SUCCESS.name();

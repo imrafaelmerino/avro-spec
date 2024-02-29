@@ -22,6 +22,10 @@ public abstract class KafkaAvroSpecSerializer implements Serializer<Json<?>> {
   @Override
   public byte[] serialize(final String topic,
                           final Json<?> json) {
+    assert specSerializer.spec.test(json)
+                              .isEmpty() :
+        "The json doesn't conform the spec. Errors: %s".formatted(specSerializer.spec.test(json));
+
     if (enableJFR) {
 
       var event = new KafkaSerializerEvent();

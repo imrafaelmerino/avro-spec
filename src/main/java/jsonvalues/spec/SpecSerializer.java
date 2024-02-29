@@ -1,6 +1,6 @@
 package jsonvalues.spec;
 
-import static jsonvalues.spec.AvroUtils.isRecordSchema;
+import static jsonvalues.spec.AvroFun.isRecordSchema;
 
 import java.io.ByteArrayOutputStream;
 import jsonvalues.JsObj;
@@ -27,7 +27,7 @@ public final class SpecSerializer {
                  BinaryEncoder reused,
                  EncoderFactory factory
                 ) {
-    this.schema = SpecToSchema.convert(spec);
+    this.schema = SpecToAvroSchema.convert(spec);
     if (!isRecordSchema(schema)) {
       throw SpecSerializerException.invalidSpecForRecords();
     }

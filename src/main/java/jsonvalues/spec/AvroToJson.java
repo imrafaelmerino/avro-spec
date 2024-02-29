@@ -1,9 +1,9 @@
 package jsonvalues.spec;
 
 import static java.util.Objects.requireNonNull;
-import static jsonvalues.spec.SpecToSchema.BIGINTEGER_LOGICAL_TYPE;
-import static jsonvalues.spec.SpecToSchema.BIG_DECIMAL_LOGICAL_TYPE;
-import static jsonvalues.spec.SpecToSchema.ISO_FORMAT_LOGICAL_TYPE;
+import static jsonvalues.spec.SpecToAvroSchema.BIGINTEGER_LOGICAL_TYPE;
+import static jsonvalues.spec.SpecToAvroSchema.BIG_DECIMAL_LOGICAL_TYPE;
+import static jsonvalues.spec.SpecToAvroSchema.ISO_FORMAT_LOGICAL_TYPE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

@@ -77,7 +77,7 @@ import jsonvalues.spec.ObjSpecDeserializer;
 import jsonvalues.spec.ObjSpecDeserializerBuilder;
 import jsonvalues.spec.SpecSerializer;
 import jsonvalues.spec.SpecSerializerBuilder;
-import jsonvalues.spec.SpecToSchema;
+import jsonvalues.spec.SpecToAvroSchema;
 import jsonvalues.spec.SpecToSchemaException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -489,7 +489,7 @@ public class Tests {
                                                              arrayOfInt())));
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(spec));
+                            () -> SpecToAvroSchema.convert(spec));
 
   }
 
@@ -502,7 +502,7 @@ public class Tests {
                                                              mapOfBool())));
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(spec));
+                            () -> SpecToAvroSchema.convert(spec));
 
   }
 
@@ -517,7 +517,7 @@ public class Tests {
                                      );
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(spec));
+                            () -> SpecToAvroSchema.convert(spec));
 
   }
 
@@ -536,7 +536,7 @@ public class Tests {
                                                                 spec)));
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(invalid)
+                            () -> SpecToAvroSchema.convert(invalid)
                            );
 
   }
@@ -1020,7 +1020,7 @@ public class Tests {
                                      .build(spec);
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(recordSpec));
+                            () -> SpecToAvroSchema.convert(recordSpec));
 
 
   }
@@ -1038,7 +1038,7 @@ public class Tests {
                                      .build(spec);
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(recordSpec));
+                            () -> SpecToAvroSchema.convert(recordSpec));
 
 
   }
@@ -1056,7 +1056,7 @@ public class Tests {
                                                               spec)));
 
     Assertions.assertThrows(SpecToSchemaException.class,
-                            () -> SpecToSchema.convert(spec1));
+                            () -> SpecToAvroSchema.convert(spec1));
 
 
   }
@@ -1197,7 +1197,7 @@ public class Tests {
                                                      .withAllOptKeys()
                                            );
 
-    Schema schema = SpecToSchema.convert(spec);
+    Schema schema = SpecToAvroSchema.convert(spec);
 
     Assertions.assertNotNull(schema);
 

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import jsonvalues.Json;
-import jsonvalues.spec.ConfluentSerializerEvent.RESULT;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serializer;
@@ -29,7 +28,7 @@ public abstract class ConfluentAvroSerializer
    * Constructor used by Kafka producer.
    */
   public ConfluentAvroSerializer() {
-    schema = new AvroSchema(SpecToSchema.convert(Objects.requireNonNull(getSpec())));
+    schema = new AvroSchema(SpecToAvroSchema.convert(Objects.requireNonNull(getSpec())));
   }
 
   public ConfluentAvroSerializer(SchemaRegistryClient client) {
@@ -65,6 +64,10 @@ public abstract class ConfluentAvroSerializer
   public byte[] serialize(String topic,
                           Headers headers,
                           Json<?> json) {
+    assert getSpec().test(json)
+               .isEmpty() :
+        "The json doesn't conform the spec. Errors: %s".formatted(getSpec().test(json));
+
     if (isJFREnabled()) {
       var event = new ConfluentSerializerEvent();
       event.begin();
