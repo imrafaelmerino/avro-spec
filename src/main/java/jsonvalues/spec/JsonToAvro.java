@@ -78,7 +78,7 @@ public final class JsonToAvro {
 
       var schema = SpecToAvroSchema.convert(spec);
 
-      assert DebuggerUtils.debugNonNull(schema);
+      assert AvroSpecFun.debugNonNull(schema);
 
       return toAvro(arr,
                     schema);
@@ -109,7 +109,7 @@ public final class JsonToAvro {
 
       var schema = SpecToAvroSchema.convert(spec);
 
-      assert DebuggerUtils.debugNonNull(schema);
+      assert AvroSpecFun.debugNonNull(schema);
 
       var record = toRecord(obj,
                             schema);
@@ -202,7 +202,7 @@ public final class JsonToAvro {
           return toAvro(obj,
                         type);
         } catch (Exception e) {
-          DebuggerUtils.debugNonNull(e);
+          AvroSpecFun.debugNonNull(e);
         }
       }
       throw JsonToAvroException.unresolvableUnion(schema);
@@ -212,9 +212,9 @@ public final class JsonToAvro {
   }
 
 
-  static GenericData.Record toRecord(final JsObj obj,
-                                     final Schema schema
-                                    ) {
+  public static GenericData.Record toRecord(final JsObj obj,
+                                            final Schema schema
+                                           ) {
     try {
       assert (schema.getType() == Schema.Type.RECORD
               || (schema.getType() == Schema.Type.UNION
@@ -235,7 +235,7 @@ public final class JsonToAvro {
           return buildRecord(obj,
                              recordSchema);
         } catch (Exception e) {
-          assert DebuggerUtils.debugNonNull(e);
+          assert AvroSpecFun.debugNonNull(e);
         }
 
       }

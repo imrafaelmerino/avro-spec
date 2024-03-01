@@ -5,7 +5,6 @@ import static jsonvalues.spec.JsSpecs.arrayOfBool;
 import static jsonvalues.spec.JsSpecs.arrayOfDec;
 import static jsonvalues.spec.JsSpecs.arrayOfDouble;
 import static jsonvalues.spec.JsSpecs.arrayOfInt;
-import static jsonvalues.spec.JsSpecs.arrayOfLong;
 import static jsonvalues.spec.JsSpecs.arrayOfSpec;
 import static jsonvalues.spec.JsSpecs.arrayOfStr;
 import static jsonvalues.spec.JsSpecs.bigInteger;
@@ -30,16 +29,22 @@ import static jsonvalues.spec.JsSpecs.ofNamedSpec;
 import static jsonvalues.spec.JsSpecs.oneSpecOf;
 import static jsonvalues.spec.JsSpecs.str;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fun.gen.Combinators;
 import fun.gen.Gen;
 import fun.gen.StrGen;
+import io.confluent.kafka.schemaregistry.json.JsonSchemaUtils;
+import io.confluent.kafka.schemaregistry.json.jackson.Jackson;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import jio.test.junit.Debugger;
 import jio.test.pbt.PropBuilder;
 import jio.test.pbt.TestFailure;
 import jio.test.pbt.TestResult;
@@ -72,21 +77,28 @@ import jsonvalues.spec.JsObjSpec;
 import jsonvalues.spec.JsObjSpecBuilder;
 import jsonvalues.spec.JsObjSpecParser;
 import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.JsSpecs;
 import jsonvalues.spec.JsonToAvro;
-import jsonvalues.spec.ObjSpecDeserializer;
-import jsonvalues.spec.ObjSpecDeserializerBuilder;
-import jsonvalues.spec.SpecSerializer;
-import jsonvalues.spec.SpecSerializerBuilder;
 import jsonvalues.spec.SpecToAvroSchema;
 import jsonvalues.spec.SpecToSchemaException;
+import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer;
+import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializerBuilder;
+import jsonvalues.spec.deserializers.avro.JsonSpecDeserializer;
+import jsonvalues.spec.deserializers.avro.JsonSpecDeserializerBuilder;
+import jsonvalues.spec.serializers.avro.JsonSpecSerializer;
+import jsonvalues.spec.serializers.avro.JsonSpecSerializerBuilder;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 
 public class Tests {
 
+
+  @RegisterExtension
+  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(5));
   Supplier<String> nameGen = StrGen.alphabetic(10,
                                                20)
                                    .sample();
@@ -202,24 +214,43 @@ public class Tests {
                                      JsObj expected,
                                      Map<String, JsValue> defaults) {
 
-    SpecSerializer serializer =
-        SpecSerializerBuilder.of(spec)
-                             .build();
-    ObjSpecDeserializer deserializer =
-        ObjSpecDeserializerBuilder.of(spec,
-                                      spec)
-                                  .build();
+    JsonSpecSerializer serializer =
+        JsonSpecSerializerBuilder.of(spec)
+                                 .build();
+    JsObjSpecDeserializer jsObjSpecDeserializer =
+        JsObjSpecDeserializerBuilder.of(spec)
+                                    .build();
+
+    JsonSpecDeserializer jsonSpecDeserializer =
+        JsonSpecDeserializerBuilder.of(spec)
+                                   .build();
 
     Assertions.assertTrue(equals(expected,
-                                 deserializer.binaryDecode(serializer.binaryEncode(input)),
+                                 jsObjSpecDeserializer.binaryDecode(serializer.binaryEncode(input)),
+                                 defaults));
+
+    Assertions.assertTrue(equals(expected,
+                                 jsonSpecDeserializer.binaryDecode(serializer.binaryEncode(input))
+                                                     .toJsObj(),
+                                 defaults));
+
+    Assertions.assertTrue(equals(expected,
+                                 jsObjSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
+                                                                                        true)),
                                  defaults));
     Assertions.assertTrue(equals(expected,
-                                 deserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                               true)),
+                                 jsonSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
+                                                                                       true))
+                                                     .toJsObj(),
                                  defaults));
     Assertions.assertTrue(equals(expected,
-                                 deserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                               false)),
+                                 jsObjSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
+                                                                                        false)),
+                                 defaults));
+    Assertions.assertTrue(equals(expected,
+                                 jsonSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
+                                                                                       false))
+                                                     .toJsObj(),
                                  defaults));
 
 
@@ -738,7 +769,8 @@ public class Tests {
                                   "int",
                                   arrayOfInt().nullable(),
                                   "long",
-                                  arrayOfLong().nullable(),
+                                  JsSpecs.arrayOfLong()
+                                         .nullable(),
                                   "bigint",
                                   arrayOfBigInt().nullable(),
                                   "decimal",
@@ -1340,10 +1372,10 @@ public class Tests {
                            .withAllOptKeys()
                            .withAllNullValues();
 
-    SpecSerializer serializer = SpecSerializerBuilder.of(recordSpec)
-                                                     .build();
-    ObjSpecDeserializer deserializer = ObjSpecDeserializerBuilder.of(recordSpec)
-                                                                 .build();
+    JsonSpecSerializer serializer = JsonSpecSerializerBuilder.of(recordSpec)
+                                                             .build();
+    JsObjSpecDeserializer deserializer = JsObjSpecDeserializerBuilder.of(recordSpec)
+                                                                     .build();
 
     Function<JsObj, TestResult> fun = obj -> {
       JsObj xs = deserializer.binaryDecode(serializer.binaryEncode(obj));
@@ -1360,6 +1392,15 @@ public class Tests {
                .repeatPar(100)
                .check()
                .assertAllSuccess();
+
+  }
+
+  public static void main(String[] args) throws IOException {
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+
+    var node = objectMapper.readTree(JsonSchemaUtils.toJson("{\"type\":\"string\"}"));
+
+    System.out.println(node);
 
   }
 

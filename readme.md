@@ -4,6 +4,7 @@
 - [Code Wins Arguments](#cwa)
 - [Avro schemas](#avro-schema)
 - [Avro serializer and deserializer](#seria-deseria)
+- [Confluent Avro serializer and deserializer](#confluent-seria-deseria)
 - [A more elaborated example with recursive schemas](#recursive-schema)
 - [What else can i do with a spec?](#specs)
 - [Installation](#installation)
@@ -436,7 +437,7 @@ Flight Recorder (JFR) events for Avro serialization and deserialization.
 ```code
 import jio.test.junit.Debugger;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import jsonvalues.spec.SpecDeserializerDebugger;
+import jsonvalues.spec.serializers.avro.AvroSerializerDebugger;
 import jsonvalues.spec.SpecSerializerDebugger;
 
 public class AvroSpecIntegrationTest {

@@ -178,8 +178,8 @@ public final class SpecToAvroSchema {
 
     if (avrocache.containsKey(fullName)) {
       Schema schema = avrocache.get(fullName);
-      DebuggerUtils.debugNonNull(schema,
-                                 () -> "Schema " + schema.getFullName() + " was retrieved from cache");
+      assert AvroSpecFun.debugNonNull(schema,
+                                      () -> "Schema " + schema.getFullName() + " was retrieved from cache");
       return schema;
     }
 

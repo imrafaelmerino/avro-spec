@@ -1,0 +1,29 @@
+package jsonvalues.spec.serializers.confluent.avro;
+
+import java.util.concurrent.atomic.AtomicLong;
+import jdk.jfr.Category;
+import jdk.jfr.Description;
+import jdk.jfr.Event;
+import jdk.jfr.Label;
+import jdk.jfr.Name;
+
+@Label("Confluent Spec Serializer Event")
+@Name("Confluent_Avro_Serializer_Event")
+@Category({"avro-spec", "Kafka", "Confluent", "Serializer"})
+@Description("Event for tracking serialization of Avro Confluent Serializer")
+final class ConfluentAvroSerializerEvent extends Event {
+
+  private static final AtomicLong serializerCounter = new AtomicLong(0);
+  public int bytes;
+  String topic;
+
+  String schema;
+
+  public String result;
+
+  String exception;
+  long counter = serializerCounter.incrementAndGet();
+
+  enum RESULT {SUCCESS, FAILURE}
+
+}

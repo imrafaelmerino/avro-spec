@@ -141,7 +141,7 @@ public final class AvroToJson {
         return toJsValue(value,
                          schema);
       } catch (Exception e) {
-        DebuggerUtils.debugNonNull(e);
+        AvroSpecFun.debugNonNull(e);
       }
     }
     throw new AvroToJsonException(UNRESOLVABLE_UNION);
