@@ -98,7 +98,7 @@ public final class JsonSpecDeserializer extends AbstractSpecDeserializer {
                    .isEmpty() :
             "Deserialized json object doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: %s".formatted(spec.test(decoded));
         return decoded;
-      } else if (container instanceof GenericArray array) {
+      } else if (container instanceof GenericArray<?> array) {
         JsArray decoded = AvroToJson.toJsArray(array);
         assert spec.test(decoded)
                    .isEmpty() :

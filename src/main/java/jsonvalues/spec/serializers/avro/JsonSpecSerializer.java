@@ -23,8 +23,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class JsonSpecSerializer {
 
-  public final JsSpec spec;
-  public final Schema schema;
+  final JsSpec spec;
+
+  final Schema schema;
   final BinaryEncoder reused;
   final EncoderFactory factory;
   final GenericDatumWriter<GenericContainer> writer;

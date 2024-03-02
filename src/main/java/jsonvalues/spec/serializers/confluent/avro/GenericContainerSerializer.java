@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import jsonvalues.spec.AvroSpecFun;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serializer;
@@ -79,10 +80,12 @@ public final class GenericContainerSerializer
       } finally {
         event.end();
         if (event.shouldCommit()) {
-
           event.topic = topic;
-          event.schema = container.getSchema()
-                                  .getFullName();
+          Schema schema = container.getSchema();
+          Schema elementType = schema.getElementType();
+          event.schema = elementType != null ?
+                         elementType
+                             .getFullName() : schema.getFullName();
           event.commit();
         }
       }

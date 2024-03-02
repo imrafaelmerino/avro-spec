@@ -81,12 +81,14 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
                                                    headers,
                                                    bytes);
         event.result = ConfluentAvroDeserializerEvent.RESULT.SUCCESS.name();
-        event.schema = container.getSchema()
-                                .getFullName();
+        event.schema = "[ %s ]".formatted(container.getSchema()
+                                                   .getElementType()
+                                                   .getFullName());
         return AvroToJson.toJsArray(container);
       } catch (Exception e) {
         event.result = ConfluentAvroDeserializerEvent.RESULT.FAILURE.name();
-        event.exception = AvroSpecFun.findUltimateCause(e).toString();
+        event.exception = AvroSpecFun.findUltimateCause(e)
+                                     .toString();
         throw e;
       } finally {
         event.end();

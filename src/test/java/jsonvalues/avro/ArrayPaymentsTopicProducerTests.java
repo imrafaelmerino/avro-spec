@@ -7,41 +7,37 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 import jio.test.junit.Debugger;
+import jsonvalues.JsArray;
 import jsonvalues.JsObj;
 import jsonvalues.Json;
+import jsonvalues.gen.JsArrayGen;
 import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
 import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
-import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericArray;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.VoidDeserializer;
+import org.apache.kafka.common.serialization.VoidSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-/**
- * The following schema has been set in the topic "payments" in the kafka cluster.
- * <p>
- * { "namespace": "io.confluent.examples.clients.basicavro", "type": "record", "name": "Payment", "fields": [ {"name":
- * "id", "type": "string"}, {"name": "amount", "type": "double"} ] }
- */
-public class PaymentsTopicProducerTest {
+public class ArrayPaymentsTopicProducerTests {
 
   @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(60));
+  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(30));
 
-  final static KafkaProducer<String, GenericRecord> producer = createProducer();
+  final static KafkaProducer<Void, GenericArray<?>> producer = createProducer();
 
-  private static KafkaProducer<String, GenericRecord> createProducer() {
+  private static KafkaProducer<Void, GenericArray<?>> createProducer() {
     Properties props = new Properties();
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-              StringSerializer.class);
+              VoidSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
               GenericContainerSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -60,9 +56,9 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
-              "group-json-deserializer");
+              "group-json-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-              StringDeserializer.class);
+              VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               jsonvalues.spec.deserializers.confluent.avro.JsonDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
@@ -70,41 +66,43 @@ public class PaymentsTopicProducerTest {
     return new KafkaConsumer<>(props);
   }
 
-  private static KafkaConsumer<String, JsObj> createConsumerWithJsonObjDeserializer() {
+  private static KafkaConsumer<Void, JsArray> createConsumerWithJsonArrDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
-              "group-jsobj-deserializer");
+              "group-jsarray-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-              StringDeserializer.class);
+              VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer.class);
+              jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
   }
 
-  static String TOPIC = "transactions";
+  static String TOPIC = "array_payments";
 
   @Test
   public void testCreateMessages() throws InterruptedException {
-    Supplier<JsObj> gen = JsObjGen.of("id",
-                                      JsStrGen.alphabetic(),
-                                      "amount",
-                                      JsDoubleGen.arbitrary(100.0d,
-                                                            1000d)
-                                     )
-                                  .sample();
+    Supplier<JsArray> gen = JsArrayGen.ofN(JsObjGen.of("id",
+                                                       JsStrGen.alphabetic(),
+                                                       "amount",
+                                                       JsDoubleGen.arbitrary(100.0d,
+                                                                             1000d)
+                                                      ),
+                                           10
+                                          )
+                                      .sample();
     int RECORDS = 10;
     try (producer) {
       for (long i = 0; i < RECORDS; i++) {
-        final JsObj payment = gen.get();
-        final ProducerRecord<String, GenericRecord> record =
+        final JsArray payments = gen.get();
+        final ProducerRecord<Void, GenericArray<?>> record =
             new ProducerRecord<>(TOPIC,
-                                 payment.getStr("id") + i,
-                                 JsonToAvro.toAvro(payment,
-                                                   Specs.paymentSpec));
+                                 null,
+                                 JsonToAvro.toAvro(payments,
+                                                   Specs.arrayPaymentSpec));
         producer.send(record);
         Thread.sleep(1000L);
       }
@@ -134,7 +132,7 @@ public class PaymentsTopicProducerTest {
         }
       }
     }
-    try (var consumer = createConsumerWithJsonObjDeserializer()) {
+    try (var consumer = createConsumerWithJsonArrDeserializer()) {
       consumer.subscribe(List.of(TOPIC));
       int consumed = 0;
       while (true) {
@@ -154,5 +152,4 @@ public class PaymentsTopicProducerTest {
       }
     }
   }
-
 }

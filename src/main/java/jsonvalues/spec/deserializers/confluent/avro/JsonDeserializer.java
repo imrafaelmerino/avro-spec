@@ -84,11 +84,19 @@ public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
                                                    headers,
                                                    bytes);
         event.result = RESULT.SUCCESS.name();
-        event.schema = container.getSchema()
-                                .getFullName();
+
         return switch (container) {
-          case GenericArray<?> array -> AvroToJson.toJsArray(array);
-          case GenericRecord record -> AvroToJson.toJsObj(record);
+          case GenericArray<?> array -> {
+            event.schema = "[ %s ]".formatted(container.getSchema()
+                                                       .getElementType()
+                                                       .getFullName());
+            yield AvroToJson.toJsArray(array);
+          }
+          case GenericRecord record -> {
+            event.schema = container.getSchema()
+                                    .getFullName();
+            yield AvroToJson.toJsObj(record);
+          }
           default -> throw new IllegalStateException(
               "Only GenericContainer and GenericRecord are supported. Received type: " + container.getClass());
         };

@@ -14,11 +14,14 @@ import static jsonvalues.spec.JsSpecs.oneSpecOf;
 
 import java.util.Map;
 import jsonvalues.JsNull;
+import jsonvalues.spec.JsArraySpec;
 import jsonvalues.spec.JsEnumBuilder;
 import jsonvalues.spec.JsObjSpec;
 import jsonvalues.spec.JsObjSpecBuilder;
 import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsSpecs;
+import jsonvalues.spec.JsonToAvro;
+import jsonvalues.spec.SpecToAvroSchema;
 
 public class Specs {
 
@@ -76,6 +79,7 @@ public class Specs {
                          );
 
 
+
   public static JsObjSpec paymentSpec =
       JsObjSpecBuilder.withName("Payment")
                       .withNamespace("io.confluent.examples.clients.basicavro")
@@ -86,5 +90,9 @@ public class Specs {
                                          )
                             );
 
+  public static JsArraySpec arrayPaymentSpec = JsSpecs.arrayOfSpec(paymentSpec);
 
+  public static void main(String[] args) {
+    System.out.println(SpecToAvroSchema.convert(arrayPaymentSpec));
+  }
 }
