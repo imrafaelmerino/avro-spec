@@ -152,7 +152,10 @@ public final class SpecToAvroSchema {
     try {
       return parser.parse(toJsSchema(spec,
                                      JsNothing.NOTHING,
-                                     new ArrayList<>()).toString());
+                                     new ArrayList<>()
+                                    )
+                              .toString()
+                         );
     } catch (SpecToSchemaException | SpecNotSupportedInAvroException | MetadataNotFoundException e) {
       throw e;
     } catch (Exception e) {
@@ -229,9 +232,12 @@ public final class SpecToAvroSchema {
 
   private static JsValue toJsSchema(JsSpec spec,
                                     JsValue defaultValue,
-                                    List<String> namedSchemaParents
+                                    List<String> parsedSchemas
                                    ) throws SpecNotSupportedInAvroException {
 
+    if (spec instanceof Cons cons) {
+      return constantSchema(cons);
+    }
     if (spec instanceof JsStrSpec) {
       return strSchema(spec,
                        defaultValue);
@@ -409,12 +415,12 @@ public final class SpecToAvroSchema {
     if (spec instanceof JsArrayOfSpec arrayOfSpec) {
       return arrayOfSpecSchema(arrayOfSpec,
                                defaultValue,
-                               namedSchemaParents);
+                               parsedSchemas);
     }
     if (spec instanceof JsObjSpec objSpec) {
       return objSpecSchema(objSpec,
                            defaultValue,
-                           namedSchemaParents);
+                           parsedSchemas);
     }
 
     if (spec instanceof JsMapOfInt) {
@@ -440,7 +446,7 @@ public final class SpecToAvroSchema {
     if (spec instanceof JsMapOfSpec mapOfSpec) {
       return mapOfSpecSchema(mapOfSpec,
                              defaultValue,
-                             namedSchemaParents);
+                             parsedSchemas);
     }
     if (spec instanceof JsMapOfStr) {
       return mapOfStrSchema(spec,
@@ -466,20 +472,23 @@ public final class SpecToAvroSchema {
     if (spec instanceof OneOf oneOf) {
       return oneOfSchema(oneOf,
                          defaultValue,
-                         namedSchemaParents);
+                         parsedSchemas);
     }
     if (spec instanceof NamedSpec namedSpec) {
       JsSpec cached = JsSpecCache.get(namedSpec.name);
-      if (cached instanceof JsObjSpec || cached instanceof JsEnum
-          || cached instanceof JsFixedBinary) //only object, enum an fixed can be referenced by name in avro
+      var alreadyParsed = parsedSchemas.contains(namedSpec.name);
+      if (alreadyParsed && (cached instanceof JsObjSpec || cached instanceof JsEnum
+                            || cached instanceof JsFixedBinary)) //only object, enum an fixed can be referenced by name in avro
       {
+
         return namedSchema(namedSpec.name,
                            namedSpec.isNullable(),
                            defaultValue);
+
       } else {
         return toJsSchema(cached,
                           defaultValue,
-                          namedSchemaParents);
+                          parsedSchemas);
       }
     }
 
@@ -487,10 +496,24 @@ public final class SpecToAvroSchema {
 
   }
 
+  private static JsValue constantSchema(final Cons cons) {
+    if ("".equals(cons.name) || cons.name == null) {
+      throw SpecNotSupportedInAvroException.errorConvertingConstantIntoSchema();
+    }
+
+    return JsObj.of(TYPE_FIELD,
+                    ENUM_TYPE,
+                    NAME_FIELD,
+                    JsStr.of(cons.name),
+                    SYMBOLS_FIELD,
+                    JsArray.of(cons.value)
+                   );
+  }
+
 
   private static JsArray oneOfSchema(OneOf js,
                                      JsValue keyDefault,
-                                     List<String> namedSchemaParents) {
+                                     List<String> parsedSchemas) {
     var specs = js.getSpecs();
     List<JsValue> avroSchemas = new ArrayList<>();
 
@@ -499,7 +522,7 @@ public final class SpecToAvroSchema {
       if (spec instanceof AvroSpec) {
         avroSchemas.add(toJsSchema(spec,
                                    JsNothing.NOTHING,
-                                   new ArrayList<>(namedSchemaParents))); //mutable list! each branch their own list of parents
+                                   new ArrayList<>(parsedSchemas))); //mutable list! each branch their own list of parents
       } else {
         throw SpecNotSupportedInAvroException.errorConvertingOneOfIntoSchema(spec,
                                                                              i);

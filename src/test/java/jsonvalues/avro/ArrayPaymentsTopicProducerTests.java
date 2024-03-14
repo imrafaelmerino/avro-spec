@@ -8,13 +8,14 @@ import java.util.Properties;
 import java.util.function.Supplier;
 import jio.test.junit.Debugger;
 import jsonvalues.JsArray;
-import jsonvalues.JsObj;
 import jsonvalues.Json;
 import jsonvalues.gen.JsArrayGen;
 import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
 import jsonvalues.spec.JsonToAvro;
+import jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer;
+import jsonvalues.spec.deserializers.confluent.avro.JsDeserializer;
 import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
 import org.apache.avro.generic.GenericArray;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -60,7 +61,7 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.deserializers.confluent.avro.JsonDeserializer.class);
+              JsDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -71,11 +72,26 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
-              "group-jsarray-deserializer-array-payments");
+              "group-js-array-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer.class);
+              JsArrayDeserializer.class);
+    props.put(SCHEMA_REGISTRY_URL_CONFIG,
+              "http://localhost:8081");
+    return new KafkaConsumer<>(props);
+  }
+
+  private static KafkaConsumer<Void, JsArray> createConsumerWithJsonArrSpecDeserializer() {
+    Properties props = new Properties();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
+              "localhost:29092");
+    props.put(ConsumerConfig.GROUP_ID_CONFIG,
+              "group-js-array-spec-deserializer-array-payments");
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+              VoidDeserializer.class);
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+              ArrayPaymentDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -133,6 +149,26 @@ public class ArrayPaymentsTopicProducerTests {
       }
     }
     try (var consumer = createConsumerWithJsonArrDeserializer()) {
+      consumer.subscribe(List.of(TOPIC));
+      int consumed = 0;
+      while (true) {
+        var records = consumer.poll(Duration.ofMillis(500));
+        System.out.println("Consumed " + records.count() + " records.");
+        for (var record : records) {
+          System.out.printf("offset = %d, key = %s, value = %s%n",
+                            record.offset(),
+                            record.key(),
+                            record.value()
+                           );
+        }
+        consumed += records.count();
+        if (consumed >= RECORDS) {
+          break;
+        }
+      }
+    }
+
+    try (var consumer = createConsumerWithJsonArrSpecDeserializer()) {
       consumer.subscribe(List.of(TOPIC));
       int consumed = 0;
       while (true) {

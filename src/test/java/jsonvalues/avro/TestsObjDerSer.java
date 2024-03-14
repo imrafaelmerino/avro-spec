@@ -29,13 +29,11 @@ import static jsonvalues.spec.JsSpecs.ofNamedSpec;
 import static jsonvalues.spec.JsSpecs.oneSpecOf;
 import static jsonvalues.spec.JsSpecs.str;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fun.gen.Combinators;
 import fun.gen.Gen;
 import fun.gen.StrGen;
-import io.confluent.kafka.schemaregistry.json.JsonSchemaUtils;
-import io.confluent.kafka.schemaregistry.json.jackson.Jackson;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -80,13 +78,12 @@ import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsSpecs;
 import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.SpecToAvroSchema;
+import jsonvalues.spec.SpecToJsonSchema;
 import jsonvalues.spec.SpecToSchemaException;
 import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer;
 import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializerBuilder;
-import jsonvalues.spec.deserializers.avro.JsonSpecDeserializer;
-import jsonvalues.spec.deserializers.avro.JsonSpecDeserializerBuilder;
-import jsonvalues.spec.serializers.avro.JsonSpecSerializer;
-import jsonvalues.spec.serializers.avro.JsonSpecSerializerBuilder;
+import jsonvalues.spec.serializers.avro.JsSpecSerializer;
+import jsonvalues.spec.serializers.avro.JsSpecSerializerBuilder;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.junit.jupiter.api.Assertions;
@@ -94,7 +91,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 
-public class Tests {
+public class TestsObjDerSer {
 
 
   @RegisterExtension
@@ -214,44 +211,20 @@ public class Tests {
                                      JsObj expected,
                                      Map<String, JsValue> defaults) {
 
-    JsonSpecSerializer serializer =
-        JsonSpecSerializerBuilder.of(spec)
-                                 .build();
+
+    JsSpecSerializer specSerializer =
+        JsSpecSerializerBuilder.of(spec)
+                               .build();
     JsObjSpecDeserializer jsObjSpecDeserializer =
         JsObjSpecDeserializerBuilder.of(spec)
                                     .build();
 
-    JsonSpecDeserializer jsonSpecDeserializer =
-        JsonSpecDeserializerBuilder.of(spec)
-                                   .build();
+
 
     Assertions.assertTrue(equals(expected,
-                                 jsObjSpecDeserializer.binaryDecode(serializer.binaryEncode(input)),
+                                 jsObjSpecDeserializer.deserialize(specSerializer.serialize(input)),
                                  defaults));
 
-    Assertions.assertTrue(equals(expected,
-                                 jsonSpecDeserializer.binaryDecode(serializer.binaryEncode(input))
-                                                     .toJsObj(),
-                                 defaults));
-
-    Assertions.assertTrue(equals(expected,
-                                 jsObjSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                                        true)),
-                                 defaults));
-    Assertions.assertTrue(equals(expected,
-                                 jsonSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                                       true))
-                                                     .toJsObj(),
-                                 defaults));
-    Assertions.assertTrue(equals(expected,
-                                 jsObjSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                                        false)),
-                                 defaults));
-    Assertions.assertTrue(equals(expected,
-                                 jsonSpecDeserializer.jsonDecode(serializer.jsonEncode(input,
-                                                                                       false))
-                                                     .toJsObj(),
-                                 defaults));
 
 
   }
@@ -321,15 +294,19 @@ public class Tests {
                                                    arrayOfBigInt()));
 
     JsObjGen gen = JsObjGen.of("a",
-                               JsBigIntGen.arbitrary(10),
+                               JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                     BigInteger.TEN),
                                "b",
                                Combinators.oneOf(Gen.cons(JsNull.NULL),
                                                  JsObjGen.of("1",
-                                                             JsBigIntGen.arbitrary(10),
+                                                             JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                                   BigInteger.TEN),
                                                              "2",
-                                                             JsBigIntGen.arbitrary(10))),
+                                                             JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                                   BigInteger.TEN))),
                                "c",
-                               JsArrayGen.ofN(JsBigIntGen.arbitrary(10),
+                               JsArrayGen.ofN(JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                    BigInteger.TEN),
                                               10));
 
     gen.sample(100)
@@ -730,7 +707,8 @@ public class Tests {
                                "long",
                                JsLongGen.arbitrary(),
                                "bigint",
-                               JsBigIntGen.arbitrary(10),
+                               JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                     BigInteger.TEN),
                                "decimal",
                                JsBigDecGen.arbitrary(),
                                "double",
@@ -831,7 +809,8 @@ public class Tests {
                                JsArrayGen.ofN(JsLongGen.arbitrary(),
                                               10),
                                "bigint",
-                               JsArrayGen.ofN(JsBigIntGen.arbitrary(10),
+                               JsArrayGen.ofN(JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                    BigInteger.TEN),
                                               10),
                                "decimal",
                                JsArrayGen.ofN(JsBigDecGen.arbitrary(),
@@ -950,9 +929,11 @@ public class Tests {
                                            JsLongGen.arbitrary()),
                                "bigint",
                                JsObjGen.of("a",
-                                           JsBigIntGen.arbitrary(10),
+                                           JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                 BigInteger.TEN),
                                            "b",
-                                           JsBigIntGen.arbitrary(10)),
+                                           JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                                 BigInteger.TEN)),
                                "decimal",
                                JsObjGen.of("a",
                                            JsBigDecGen.arbitrary(),
@@ -1351,7 +1332,8 @@ public class Tests {
                                "long",
                                JsLongGen.arbitrary(),
                                "bigint",
-                               JsBigIntGen.arbitrary(10),
+                               JsBigIntGen.arbitrary(BigInteger.ZERO,
+                                                     BigInteger.TEN),
                                "decimal",
                                JsBigDecGen.arbitrary(),
                                "double",
@@ -1372,13 +1354,13 @@ public class Tests {
                            .withAllOptKeys()
                            .withAllNullValues();
 
-    JsonSpecSerializer serializer = JsonSpecSerializerBuilder.of(recordSpec)
-                                                             .build();
+    JsSpecSerializer serializer = JsSpecSerializerBuilder.of(recordSpec)
+                                                         .build();
     JsObjSpecDeserializer deserializer = JsObjSpecDeserializerBuilder.of(recordSpec)
                                                                      .build();
 
     Function<JsObj, TestResult> fun = obj -> {
-      JsObj xs = deserializer.binaryDecode(serializer.binaryEncode(obj));
+      JsObj xs = deserializer.deserialize(serializer.serialize(obj));
       return equals(obj,
                     xs,
                     defaults)
@@ -1396,12 +1378,74 @@ public class Tests {
   }
 
   public static void main(String[] args) throws IOException {
-    ObjectMapper objectMapper = Jackson.newObjectMapper();
+    String NAME_FIELD = "name";
+    String TYPE_FIELD = "type";
+    String BUTTON_COUNT_FIELD = "buttonCount";
+    String WHEEL_COUNT_FIELD = "wheelCount";
+    String TRACKING_TYPE_FIELD = "trackingType";
+    String KEY_COUNT_FIELD = "keyCount";
+    String MEDIA_BUTTONS_FIELD = "mediaButtons";
+    String CONNECTED_DEVICES_FIELD = "connectedDevices";
+    String PERIPHERAL_FIELD = "peripheral";
+    JsSpec TRACKING_TYPE_ENUM = JsEnumBuilder.withName("tracking")
+                                             .build(
+                                                 "ball",
+                                                 "optical");
+    var baseSpec =
+        JsObjSpec.of(NAME_FIELD,
+                     JsSpecs.str()
+                    );
 
-    var node = objectMapper.readTree(JsonSchemaUtils.toJson("{\"type\":\"string\"}"));
+    var mouseSpec =
+        JsObjSpec.of(TYPE_FIELD,
+                     JsSpecs.cons("mouse_type",
+                                  JsStr.of("mouse")),
+                     BUTTON_COUNT_FIELD,
+                     JsSpecs.integer(),
+                     WHEEL_COUNT_FIELD,
+                     JsSpecs.integer(),
+                     TRACKING_TYPE_FIELD,
+                     TRACKING_TYPE_ENUM
+                    )
+                 .concat(baseSpec);
 
-    System.out.println(node);
+    var keyboardSpec =
+        JsObjSpec.of(TYPE_FIELD,
+                     JsSpecs.cons("keyboard_type",
+                                  JsStr.of("keyboard")),
+                     KEY_COUNT_FIELD,
+                     JsSpecs.integer(),
+                     MEDIA_BUTTONS_FIELD,
+                     JsSpecs.bool()
+                    )
+                 .concat(baseSpec);
 
+    var usbHubSpec =
+        JsObjSpecBuilder.withName("usb_hub")
+                        .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD,
+                                                   JsNull.NULL))
+                        .build(JsObjSpec.of(
+                                            TYPE_FIELD,
+                                            JsSpecs.cons("usbHub_type",
+                                                         JsStr.of("usbHub")),
+                                            CONNECTED_DEVICES_FIELD,
+                                            JsSpecs.arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD))
+                                                   .nullable()
+                                           )
+                                        .withOptKeys(CONNECTED_DEVICES_FIELD)
+                                        .concat(baseSpec));
+
+    var peripheralSpec =
+        JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
+                            oneSpecOf(JsSpecs.ofNamedSpec("mouse",
+                                                          mouseSpec),
+                                      JsSpecs.ofNamedSpec("keyboard",
+                                                          keyboardSpec),
+                                      JsSpecs.ofNamedSpec("usbHub",
+                                                          usbHubSpec)));
+
+    System.out.println(SpecToJsonSchema.convert(peripheralSpec));
+    System.out.println(SpecToAvroSchema.convert(peripheralSpec));
   }
 
 

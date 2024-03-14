@@ -11,7 +11,7 @@ import jdk.jfr.Name;
 @Name("Avro_Deserializer_Event")
 @Category({"avro-spec", "Avro", "Deserializer"})
 @Description("Event for tracking deserialization of Avro Deserializer")
-final class AvroDeserializerEvent extends Event {
+final class DeserializerEvent extends Event {
 
   private static final AtomicLong deserializerCounter = new AtomicLong(0);
 

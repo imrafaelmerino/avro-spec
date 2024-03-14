@@ -7,9 +7,9 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
 
 /**
- * Builder class for constructing instances of {@link JsonSpecSerializer}.
+ * Builder class for constructing instances of {@link JsSpecSerializer}.
  */
-public final class JsonSpecSerializerBuilder {
+public final class JsSpecSerializerBuilder {
 
   private boolean isJFREnabled = true;
 
@@ -17,7 +17,7 @@ public final class JsonSpecSerializerBuilder {
   private BinaryEncoder reused = null;
   private EncoderFactory factory = EncoderFactory.get();
 
-  private JsonSpecSerializerBuilder(final JsSpec spec) {
+  private JsSpecSerializerBuilder(final JsSpec spec) {
     this.spec = requireNonNull(spec);
   }
 
@@ -27,8 +27,8 @@ public final class JsonSpecSerializerBuilder {
    * @param spec The JsSpec representing the JSON validation rules.
    * @return A SpecSerializerBuilder instance.
    */
-  public static JsonSpecSerializerBuilder of(final JsSpec spec) {
-    return new JsonSpecSerializerBuilder(spec);
+  public static JsSpecSerializerBuilder of(final JsSpec spec) {
+    return new JsSpecSerializerBuilder(spec);
   }
 
 
@@ -38,7 +38,7 @@ public final class JsonSpecSerializerBuilder {
    * @param reused The BinaryEncoder to be reused.
    * @return This SpecSerializerBuilder instance.
    */
-  public JsonSpecSerializerBuilder withReusedEncoder(final BinaryEncoder reused) {
+  public JsSpecSerializerBuilder withReusedEncoder(final BinaryEncoder reused) {
     this.reused = requireNonNull(reused);
     return this;
   }
@@ -49,12 +49,12 @@ public final class JsonSpecSerializerBuilder {
    * @param factory The EncoderFactory to be used.
    * @return This SpecSerializerBuilder instance.
    */
-  public JsonSpecSerializerBuilder withEncoderFactory(final EncoderFactory factory) {
+  public JsSpecSerializerBuilder withEncoderFactory(final EncoderFactory factory) {
     this.factory = requireNonNull(factory);
     return this;
   }
 
-  public JsonSpecSerializerBuilder withoutJFREvents() {
+  public JsSpecSerializerBuilder withoutJFREvents() {
     this.isJFREnabled = false;
     return this;
   }
@@ -64,10 +64,10 @@ public final class JsonSpecSerializerBuilder {
    *
    * @return A SpecSerializer instance.
    */
-  public JsonSpecSerializer build() {
-    return new JsonSpecSerializer(isJFREnabled,
-                                  spec,
-                                  reused,
-                                  factory);
+  public JsSpecSerializer build() {
+    return new JsSpecSerializer(isJFREnabled,
+                                spec,
+                                reused,
+                                factory);
   }
 }

@@ -14,16 +14,11 @@ import jdk.jfr.Name;
 final class ConfluentAvroSerializerEvent extends Event {
 
   private static final AtomicLong serializerCounter = new AtomicLong(0);
-  public int bytes;
+  int bytes;
   String topic;
-
-  String schema;
-
-  public String result;
-
+  String result;
   String exception;
   long counter = serializerCounter.incrementAndGet();
-
   enum RESULT {SUCCESS, FAILURE}
 
 }

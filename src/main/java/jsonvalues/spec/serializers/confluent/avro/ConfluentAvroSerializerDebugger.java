@@ -22,12 +22,11 @@ public final class ConfluentAvroSerializerDebugger implements Consumer<RecordedE
   private ConfluentAvroSerializerDebugger() {
   }
 
-
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_SUC = """
       ------ Confluent-Avro-Serializer -----
       |  Result: %s
       |  Topic: %s
-      |  Schema: %s
       |  Duration: %s
       |  Bytes: %s
       |  Counter: %s
@@ -35,12 +34,11 @@ public final class ConfluentAvroSerializerDebugger implements Consumer<RecordedE
       |  Event Start Time: %s
       ----------------------
       """;
-
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_ERR = """
       ------ Confluent-Avro-Serializer -----
       |  Result: %s
       |  Topic: %s
-      |  Schema: %s
       |  Exception: %s
       |  Duration: %s
       |  Bytes: %s
@@ -57,20 +55,18 @@ public final class ConfluentAvroSerializerDebugger implements Consumer<RecordedE
                                   .getName());
     var result = event.getValue("result");
     var topic = event.getValue("topic");
-    var schema = event.getValue("schema");
     boolean isSuccess = "SUCCESS".equals(result);
     RecordedThread thread = event.getThread();
     var str = isSuccess ?
               String.format(FORMAT_SUC,
                             result,
                             topic,
-                            schema,
                             AvroSpecFun.formatTime(event.getDuration()
                                                         .toNanos()),
 
                             event.getValue("bytes"),
                             event.getValue("counter"),
-                            thread!=null ? thread.getJavaName(): "null",
+                            thread != null ? thread.getJavaName() : "null",
                             event.getStartTime()
                                  .atZone(ZoneOffset.UTC)
                                  .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -78,13 +74,12 @@ public final class ConfluentAvroSerializerDebugger implements Consumer<RecordedE
               String.format(FORMAT_ERR,
                             result,
                             topic,
-                            schema,
                             event.getValue("exception"),
                             AvroSpecFun.formatTime(event.getDuration()
                                                         .toNanos()),
                             event.getValue("bytes"),
                             event.getValue("counter"),
-                            thread!=null ? thread.getJavaName(): "null",
+                            thread != null ? thread.getJavaName() : "null",
                             event.getStartTime()
                                  .atZone(ZoneOffset.UTC)
                                  .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)

@@ -8,31 +8,40 @@ import java.util.Objects;
 import jsonvalues.JsObj;
 import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
+import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.SpecToAvroSchema;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
+// SuppressWarnings: these constructors are from confluent source code. Anyway, this-scape warning doesn't seem to be an issue to be concerned.
+@SuppressWarnings("this-escape")
+public abstract class JsObjSpecDeserializer extends AbstractKafkaAvroDeserializer
     implements Deserializer<JsObj> {
 
 
-  final boolean isJFREnabled;
+  protected abstract JsSpec getSpec();
+
+  protected abstract boolean isJFREnabled();
+
+  private final Schema schema;
 
 
-  public JsObjDeserializer() {
-    isJFREnabled =
-        Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
-                                                "true"));
+  public JsObjSpecDeserializer() {
+    this.schema = SpecToAvroSchema.convert(getSpec());
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client) {
+
+  @SuppressWarnings("this-escape")
+  public JsObjSpecDeserializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props) {
+  public JsObjSpecDeserializer(SchemaRegistryClient client,
+                               Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
@@ -46,9 +55,9 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
               null);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props,
-                           boolean isKey) {
+  public JsObjSpecDeserializer(SchemaRegistryClient client,
+                               Map<String, ?> props,
+                               boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -74,7 +83,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
       return null;
     }
 
-    if (isJFREnabled) {
+    if (isJFREnabled()) {
       var event = new DeserializerEvent();
       event.begin();
       try {
@@ -82,6 +91,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
                                                    headers,
                                                    bytes);
         event.result = DeserializerEvent.RESULT.SUCCESS.name();
+
         return AvroToJson.toJsObj(container);
       } catch (Exception e) {
         event.result = DeserializerEvent.RESULT.FAILURE.name();
@@ -101,6 +111,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
       var container = deserializeToAvroContainer(topic,
                                                  headers,
                                                  bytes);
+
       return AvroToJson.toJsObj(container);
     }
 
@@ -113,7 +124,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
                                        isKey,
                                        headers,
                                        Objects.requireNonNull(bytes),
-                                       null);
+                                       schema);
   }
 
 

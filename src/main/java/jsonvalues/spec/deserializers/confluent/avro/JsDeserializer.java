@@ -7,34 +7,33 @@ import java.util.Map;
 import java.util.Objects;
 import jsonvalues.Json;
 import jsonvalues.spec.AvroToJson;
-import jsonvalues.spec.deserializers.confluent.avro.ConfluentAvroDeserializerEvent.RESULT;
+import jsonvalues.spec.deserializers.confluent.avro.DeserializerEvent.RESULT;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
+public final class JsDeserializer extends AbstractKafkaAvroDeserializer
     implements Deserializer<Json<?>> {
-
 
   final boolean isJFREnabled;
 
 
-  public JsonDeserializer() {
+  public JsDeserializer() {
     isJFREnabled =
         Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
                                                 "true"));
   }
 
-  public JsonDeserializer(SchemaRegistryClient client) {
+  public JsDeserializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsonDeserializer(SchemaRegistryClient client,
-                          Map<String, ?> props) {
+  public JsDeserializer(SchemaRegistryClient client,
+                        Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
@@ -48,9 +47,9 @@ public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
               null);
   }
 
-  public JsonDeserializer(SchemaRegistryClient client,
-                          Map<String, ?> props,
-                          boolean isKey) {
+  public JsDeserializer(SchemaRegistryClient client,
+                        Map<String, ?> props,
+                        boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -77,7 +76,7 @@ public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
     }
 
     if (isJFREnabled) {
-      var event = new ConfluentAvroDeserializerEvent();
+      var event = new DeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
@@ -86,19 +85,9 @@ public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
         event.result = RESULT.SUCCESS.name();
 
         return switch (container) {
-          case GenericArray<?> array -> {
-            event.schema = "[ %s ]".formatted(container.getSchema()
-                                                       .getElementType()
-                                                       .getFullName());
-            yield AvroToJson.toJsArray(array);
-          }
-          case GenericRecord record -> {
-            event.schema = container.getSchema()
-                                    .getFullName();
-            yield AvroToJson.toJsObj(record);
-          }
-          default -> throw new IllegalStateException(
-              "Only GenericContainer and GenericRecord are supported. Received type: " + container.getClass());
+          case GenericArray<?> array -> AvroToJson.toJsArray(array);
+          case GenericRecord record -> AvroToJson.toJsObj(record);
+          default -> throw new IllegalStateException("Only GenericArray and GenericRecord are supported. Received type: " + container.getClass());
         };
 
       } catch (Exception e) {
@@ -129,7 +118,7 @@ public final class JsonDeserializer extends AbstractKafkaAvroDeserializer
                                           isKey,
                                           headers,
                                           Objects.requireNonNull(bytes),
-                                          specificAvroReaderSchema);
+                                          null);
   }
 
 

@@ -7,23 +7,23 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 import jio.test.junit.Debugger;
+import jsonvalues.JsArray;
 import jsonvalues.JsObj;
-import jsonvalues.Json;
+import jsonvalues.gen.JsArrayGen;
 import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
-import jsonvalues.spec.JsonToAvro;
-import jsonvalues.spec.deserializers.avro.JsonSpecDeserializer;
-import jsonvalues.spec.deserializers.avro.JsonSpecDeserializerBuilder;
-import jsonvalues.spec.serializers.avro.JsonSpecSerializer;
-import jsonvalues.spec.serializers.avro.JsonSpecSerializerBuilder;
-import org.apache.avro.generic.GenericRecord;
+import jsonvalues.spec.deserializers.avro.JsArraySpecDeserializer;
+import jsonvalues.spec.deserializers.avro.JsArraySpecDeserializerBuilder;
+import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer;
+import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializerBuilder;
+import jsonvalues.spec.serializers.avro.JsSpecSerializer;
+import jsonvalues.spec.serializers.avro.JsSpecSerializerBuilder;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -41,10 +41,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class PaymentsWithoutSchemaTopicProducerTest {
 
   @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(30));
-
-
-  final static KafkaProducer<String, byte[]> producer = createProducer();
+  static Debugger debugger =
+      MyDebuggers.avroDebugger(Duration.ofSeconds(30));
 
 
   private static KafkaProducer<String, byte[]> createProducer() {
@@ -82,16 +80,16 @@ public class PaymentsWithoutSchemaTopicProducerTest {
 
   static String TOPIC = "transactions_without_schema";
 
-  JsonSpecSerializer specSerializer =
-      JsonSpecSerializerBuilder.of(Specs.paymentSpec)
-                              .build();
-
-  JsonSpecDeserializer specDeserializer =
-      JsonSpecDeserializerBuilder.of(Specs.paymentSpec)
-                                .build();
 
   @Test
-  public void testCreateMessages() throws InterruptedException {
+  public void testDerSerSpecPayment() throws InterruptedException {
+    JsSpecSerializer specSerializer =
+        JsSpecSerializerBuilder.of(Specs.paymentSpec)
+                               .build();
+
+    JsObjSpecDeserializer specDeserializer =
+        JsObjSpecDeserializerBuilder.of(Specs.paymentSpec)
+                                    .build();
     Supplier<JsObj> gen = JsObjGen.of("id",
                                       JsStrGen.alphabetic(),
                                       "amount",
@@ -100,14 +98,14 @@ public class PaymentsWithoutSchemaTopicProducerTest {
                                      )
                                   .sample();
     int RECORDS = 10;
-    try (producer) {
+    try (var producer = createProducer()) {
       for (long i = 0; i < RECORDS; i++) {
-        final JsObj payment = gen.get();
+        JsObj payment = gen.get();
 
-        final ProducerRecord<String, byte[]> record =
+        ProducerRecord<String, byte[]> record =
             new ProducerRecord<>(TOPIC,
                                  payment.getStr("id") + i,
-                                 specSerializer.binaryEncode(payment));
+                                 specSerializer.serialize(payment));
         producer.send(record);
         Thread.sleep(1000L);
       }
@@ -125,11 +123,77 @@ public class PaymentsWithoutSchemaTopicProducerTest {
         var records = consumer.poll(Duration.ofMillis(500));
         System.out.println("Consumed " + records.count() + " records.");
         for (var record : records) {
+          byte[] bytes = record.value()
+                               .get();
+          JsObj deserialized = specDeserializer.deserialize(bytes);
           System.out.printf("offset = %d, key = %s, value = %s%n",
                             record.offset(),
                             record.key(),
-                            specDeserializer.binaryDecode(record.value().get())
+                            deserialized
                            );
+
+        }
+        consumed += records.count();
+        if (consumed >= RECORDS) {
+          break;
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testDerSerArrayOfSpecPayment() throws InterruptedException {
+    JsSpecSerializer specSerializer =
+        JsSpecSerializerBuilder.of(Specs.arrayPaymentSpec)
+                               .build();
+
+    JsArraySpecDeserializer specDeserializer =
+        JsArraySpecDeserializerBuilder.of(Specs.arrayPaymentSpec)
+                                      .build();
+    Supplier<JsArray> gen = JsArrayGen.biased(JsObjGen.of("id",
+                                                          JsStrGen.alphabetic(),
+                                                          "amount",
+                                                          JsDoubleGen.arbitrary(100.0d,
+                                                                                1000d)
+                                                         ),
+                                              0,
+                                              100)
+                                      .sample();
+    int RECORDS = 10;
+    try (var producer = createProducer()) {
+      for (long i = 0; i < RECORDS; i++) {
+        JsArray payments = gen.get();
+
+        ProducerRecord<String, byte[]> record =
+            new ProducerRecord<>(TOPIC,
+                                 payments.size() + "",
+                                 specSerializer.serialize(payments));
+        producer.send(record);
+        Thread.sleep(1000L);
+      }
+
+      producer.flush();
+      System.out.printf("Successfully produced 10 messages to a topic called %s%n",
+                        TOPIC);
+
+    }
+
+    try (var consumer = createConsumer()) {
+      consumer.subscribe(List.of(TOPIC));
+      int consumed = 0;
+      while (true) {
+        var records = consumer.poll(Duration.ofMillis(500));
+        System.out.println("Consumed " + records.count() + " records.");
+        for (var record : records) {
+          byte[] bytes = record.value()
+                               .get();
+          JsArray deserialized = specDeserializer.deserialize(bytes);
+          System.out.printf("offset = %d, key = %s, value = %s%n",
+                            record.offset(),
+                            record.key(),
+                            deserialized
+                           );
+
         }
         consumed += records.count();
         if (consumed >= RECORDS) {

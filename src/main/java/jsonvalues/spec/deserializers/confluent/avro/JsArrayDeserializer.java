@@ -74,19 +74,16 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
     }
 
     if (isJFREnabled) {
-      var event = new ConfluentAvroDeserializerEvent();
+      var event = new DeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
                                                    headers,
                                                    bytes);
-        event.result = ConfluentAvroDeserializerEvent.RESULT.SUCCESS.name();
-        event.schema = "[ %s ]".formatted(container.getSchema()
-                                                   .getElementType()
-                                                   .getFullName());
+        event.result = DeserializerEvent.RESULT.SUCCESS.name();
         return AvroToJson.toJsArray(container);
       } catch (Exception e) {
-        event.result = ConfluentAvroDeserializerEvent.RESULT.FAILURE.name();
+        event.result = DeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;
@@ -100,9 +97,10 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
       }
 
     } else {
-      return deserialize(Objects.requireNonNull(topic),
-                         Objects.requireNonNull(headers),
-                         Objects.requireNonNull(bytes));
+      var container = deserializeToAvroContainer(topic,
+                                                 headers,
+                                                 bytes);
+      return AvroToJson.toJsArray(container);
     }
 
   }
@@ -114,7 +112,7 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
                                          isKey,
                                          headers,
                                          Objects.requireNonNull(bytes),
-                                         specificAvroReaderSchema);
+                                         null);
   }
 
 

@@ -2,11 +2,9 @@ package jsonvalues.avro;
 
 import java.time.Duration;
 import jio.test.junit.Debugger;
-import jsonvalues.spec.deserializers.avro.AvroDeserializerDebugger;
-import jsonvalues.spec.deserializers.confluent.avro.ConfluentAvroDeserializerDebugger;
+import jsonvalues.spec.deserializers.avro.DeserializerDebugger;
 import jsonvalues.spec.serializers.avro.AvroSerializerDebugger;
 import jsonvalues.spec.serializers.confluent.avro.ConfluentAvroSerializerDebugger;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public final class MyDebuggers {
 
@@ -21,9 +19,9 @@ public final class MyDebuggers {
     debugger.registerEventConsumer("Confluent_Avro_Serializer_Event",
                                    ConfluentAvroSerializerDebugger.INSTANCE);
     debugger.registerEventConsumer("Confluent_Avro_Deserializer_Event",
-                                   ConfluentAvroDeserializerDebugger.INSTANCE);
+                                   jsonvalues.spec.deserializers.confluent.avro.DeserializerDebugger.INSTANCE);
     debugger.registerEventConsumer("Avro_Deserializer_Event",
-                                   AvroDeserializerDebugger.INSTANCE);
+                                   DeserializerDebugger.INSTANCE);
 
     return debugger;
   }

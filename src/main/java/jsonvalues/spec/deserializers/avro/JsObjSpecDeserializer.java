@@ -1,15 +1,12 @@
 package jsonvalues.spec.deserializers.avro;
 
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import jsonvalues.JsObj;
 import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
-import jsonvalues.spec.AvroToJsonException;
 import jsonvalues.spec.JsSpec;
-import jsonvalues.spec.MetadataNotFoundException;
-import jsonvalues.spec.SpecNotSupportedInAvroException;
 import jsonvalues.spec.SpecToAvroSchema;
-import jsonvalues.spec.SpecToSchemaException;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
@@ -26,7 +23,6 @@ import org.apache.avro.io.DecoderFactory;
 public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
 
   final boolean isJFREnabled;
-
   final JsSpec spec;
   final GenericRecord reusedRecord;
   final GenericDatumReader<GenericRecord> reader;
@@ -55,21 +51,20 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
    *
    * @param json The Avro binary data to decode.
    * @return A {@code JsObj} representing the decoded JSON value.
-   * @throws JsSpecDeserializerException If there is an error during deserialization.
    */
-  public JsObj binaryDecode(final byte[] json) {
+  public JsObj deserialize(final byte[] json) {
     if (json == null) {
       return null;
     }
     if (isJFREnabled) {
-      var event = new AvroDeserializerEvent();
+      var event = new DeserializerEvent();
       event.begin();
       try {
-        var result = _binaryDecode(json);
-        event.result = AvroDeserializerEvent.RESULT.SUCCESS.name();
+        var result = binaryDecode(json);
+        event.result = DeserializerEvent.RESULT.SUCCESS.name();
         return result;
       } catch (Exception e) {
-        event.result = AvroDeserializerEvent.RESULT.FAILURE.name();
+        event.result = DeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;
@@ -81,12 +76,12 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
         }
       }
     } else {
-      return _binaryDecode(json);
+      return binaryDecode(json);
     }
 
   }
 
-  private JsObj _binaryDecode(final byte[] json) {
+  private JsObj binaryDecode(final byte[] json) {
     try {
       var decoder = decoderFactory.binaryDecoder(json,
                                                  reusedDecoder);
@@ -95,72 +90,11 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
       JsObj decoded = AvroToJson.toJsObj(record);
       assert spec.test(decoded)
                  .isEmpty() :
-          "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: "
-          + spec.test(decoded);
+          "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: %s".formatted(spec.test(decoded));
       return decoded;
-    } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
-             AvroToJsonException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new JsSpecDeserializerException(e);
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
     }
   }
-
-  /**
-   * Decodes Avro JSON data into a {@link JsObj} based on the reader specification.
-   *
-   * @param json The Avro JSON data to decode.
-   * @return A {@code JsObj} representing the decoded JSON value.
-   * @throws JsSpecDeserializerException If there is an error during deserialization.
-   */
-  public JsObj jsonDecode(final byte[] json) {
-    if (json == null) {
-      return null;
-    }
-    if (isJFREnabled) {
-      var event = new AvroDeserializerEvent();
-      event.begin();
-      try {
-        var result = _jsonDecode(json);
-        event.result = AvroDeserializerEvent.RESULT.SUCCESS.name();
-        return result;
-      } catch (Exception e) {
-        event.result = AvroDeserializerEvent.RESULT.FAILURE.name();
-        event.exception = AvroSpecFun.findUltimateCause(e)
-                                     .toString();
-        throw e;
-      } finally {
-        event.end();
-        if (event.shouldCommit()) {
-          event.bytes = json.length;
-          event.commit();
-        }
-      }
-    } else {
-      return _jsonDecode(json);
-    }
-  }
-
-  private JsObj _jsonDecode(final byte[] json) {
-    try {
-      var decoder = decoderFactory.jsonDecoder(schema,
-                                               new String(json,
-                                                          StandardCharsets.UTF_8));
-      GenericRecord record = reader.read(reusedRecord,
-                                         decoder);
-      JsObj xs = AvroToJson.toJsObj(record);
-      assert spec.test(xs)
-                 .isEmpty() :
-          "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: "
-          + spec.test(xs);
-      return xs;
-    } catch (SpecNotSupportedInAvroException | MetadataNotFoundException | SpecToSchemaException |
-             AvroToJsonException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new JsSpecDeserializerException(e);
-    }
-  }
-
 
 }

@@ -1,4 +1,4 @@
-package jsonvalues.spec.deserializers.confluent.avro;
+package jsonvalues.spec.deserializers.avro;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -12,22 +12,15 @@ import jsonvalues.spec.AvroSpecFun;
  * of Avro serialization events, including the serializer name, result, number of errors, number of successes, duration,
  * exception details, thread information, and event start time.
  */
-public final class ConfluentAvroDeserializerDebugger implements Consumer<RecordedEvent> {
+public final class DeserializerDebugger implements Consumer<RecordedEvent> {
 
-  /**
-   * The singleton instance of {@code SpecSerializerDebugger}.
-   */
-  public static final ConfluentAvroDeserializerDebugger INSTANCE = new ConfluentAvroDeserializerDebugger();
-
-  private ConfluentAvroDeserializerDebugger() {
+  private DeserializerDebugger() {
   }
-
-
+  public static final DeserializerDebugger INSTANCE = new DeserializerDebugger();
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_SUC = """
-      ------ Confluent-Avro-Deserializer -----
+      ------ Avro-Deserializer -----
       |  Result: %s
-      |  Topic: %s
-      |  Schema: %s
       |  Duration: %s
       |  Bytes: %s
       |  Counter: %s
@@ -35,12 +28,10 @@ public final class ConfluentAvroDeserializerDebugger implements Consumer<Recorde
       |  Event Start Time: %s
       ----------------------
       """;
-
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_ERR = """
-      ------ Confluent-Avro-Deserializer -----
+      ------ Avro-Deserializer -----
       |  Result: %s
-      |  Topic: %s
-      |  Schema: %s
       |  Exception: %s
       |  Duration: %s
       |  Bytes: %s
@@ -49,42 +40,36 @@ public final class ConfluentAvroDeserializerDebugger implements Consumer<Recorde
       |  Event Start Time: %s
       ----------------------
       """;
-  static final String EVENT_NAME = "Confluent_Avro_Deserializer_Event";
+  static final String EVENT_NAME = "Avro_Deserializer_Event";
 
   @Override
   public void accept(RecordedEvent event) {
     assert EVENT_NAME.equals(event.getEventType()
                                   .getName());
     var result = event.getValue("result");
-    var topic = event.getValue("topic");
-    var schema = event.getValue("schema");
     boolean isSuccess = "SUCCESS".equals(result);
     RecordedThread thread = event.getThread();
     var str = isSuccess ?
               String.format(FORMAT_SUC,
                             result,
-                            topic,
-                            schema,
                             AvroSpecFun.formatTime(event.getDuration()
                                                         .toNanos()),
 
                             event.getValue("bytes"),
                             event.getValue("counter"),
-                            thread != null ? thread.getJavaName() : "null",
+                            thread!=null ? thread.getJavaName(): "null",
                             event.getStartTime()
                                  .atZone(ZoneOffset.UTC)
                                  .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                            ) :
               String.format(FORMAT_ERR,
                             result,
-                            topic,
-                            schema,
                             event.getValue("exception"),
                             AvroSpecFun.formatTime(event.getDuration()
                                                         .toNanos()),
                             event.getValue("bytes"),
                             event.getValue("counter"),
-                            thread != null ? thread.getJavaName() : "null",
+                            thread!=null ? thread.getJavaName(): "null",
                             event.getStartTime()
                                  .atZone(ZoneOffset.UTC)
                                  .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)

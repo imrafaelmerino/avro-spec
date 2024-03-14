@@ -94,5 +94,6 @@ public class Specs {
 
   public static void main(String[] args) {
     System.out.println(SpecToAvroSchema.convert(arrayPaymentSpec));
+    System.out.println(SpecToAvroSchema.convert(peripheralSpec));
   }
 }

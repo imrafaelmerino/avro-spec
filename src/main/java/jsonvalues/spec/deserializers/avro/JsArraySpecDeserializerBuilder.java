@@ -42,11 +42,11 @@ public final class JsArraySpecDeserializerBuilder {
   /**
    * Sets the reused record for the deserializer.
    *
-   * @param reusedRecord The reused {@link GenericRecord} for deserialization.
+   * @param reusedArray The reused {@link GenericRecord} for deserialization.
    * @return This builder instance.
    */
-  public JsArraySpecDeserializerBuilder withReusedArray(GenericArray<?> reusedRecord) {
-    this.reusedArray = Objects.requireNonNull(reusedRecord);
+  public JsArraySpecDeserializerBuilder withReusedArray(GenericArray<?> reusedArray) {
+    this.reusedArray = Objects.requireNonNull(reusedArray);
     return this;
   }
 

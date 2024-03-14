@@ -11,15 +11,73 @@
 
 ## <a name="avro-spec"><a/> Avro spec
 
-`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers
-with the [specs](https://github.com/imrafaelmerino/json-values#specs) from json-values. Leveraging the simplicity,
-intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided
-serializers/deserializers enable the transmission of the immutable and persistent JSON
-from [json-values](https://github.com/imrafaelmerino/json-values) through the wire.
+`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers with the [specs](https://github.com/imrafaelmerino/json-values#specs) from json-values. Leveraging the simplicity, intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided serializers/deserializers enable the transmission of the immutable and persistent JSON from [json-values](https://github.com/imrafaelmerino/json-values) through the wire in Avro format, supporting Confluent Schema Registry.
 
-## <a name="cwa"><a/> Code Wins Arguments
+## <a name="serializers"><a/> Avro serializers and deserializers
+
+You can find the following serializers:
+
+- Confluent Avro serializers with schema registry integration:
+  * `jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer` to serialize an Avro `GenericContainer` into bytes 
+  * `jsonvalues.spec.serializers.confluent.avro.JsSpecSerializer` to serialize a Json that conforms a spec into bytes
+
+- Avro serializers:
+  *  `jsonvalues.spec.serializers.avro.JsSpecSerializer` to serialize a Json that conforms a spec into bytes
+
+And the following deserializers:
+
+- Confluent Avro deserializers with Schema Registry integration:
+  * `jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer` to deserialize bytes into a JsObj
+  * `jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer` to deserialize bytes into a JsArray
+  * `jsonvalues.spec.deserializers.confluent.avro.JsDeserializer` to deserialize bytes into a Json
+  * `jsonvalues.spec.deserializers.confluent.avro.JsObjSpecDeserializer` to deserialize bytes into a JsObj that conforms a spec
+  * `jsonvalues.spec.deserializers.confluent.avro.JsArraySpecDeserializer` to deserialize bytes into a JsArray that conforms a spec
+
+- Avro deserializers:
+  * `jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer` to deserialize bytes into a JsObj that conforms a spec
+  * `jsonvalues.spec.deserializers.avro.JsArraySpecDeserializer` to deserialize bytes into a JsArray that conforms a spec
+
+Which serializer to use?
+
+If you are working with Kafka, you must know that the most efficient way to serialize is using just 
+one producer for all the topics. This is because the producer is thread-safe and do a lot of batching 
+before sending the data to the brokers. Given said that, you have two options:
+
+
+`jsonvalues.spec.confluent.avro.GenericContainerSerializer` for Avro format  and integration
+with Schema Registry from Confluent
+
 
 ```code
+
+
+```
+
+
+`jsonvalues.spec.avro.JsSpecSerializer` for Avro format without Schema registry.
+In this case you have to use the ByteArraySerializer from Kafka and the
+spec serializer to convert Json into bytes
+
+```code
+
+
+```
+
+If you have one producer per topic because each topic has a different configurations:
+`jsonvalues.spec.confluent.avro.JsSpecSerializer` for Avro format in Confluent and Schema registry or
+`jsonvalues.spec.avro.JsSpecSerializer` for Avro format without Schema registry. In both cases you need to create a new serializer extending those classes and providing the spec. Find below and example:
+
+```code
+
+
+```
+
+## <a name="avro-schema"><a/> Avro schemas
+
+Create Avro schemas in a natural way, for example, from the `personSpec`:
+
+```code
+
 JsSpec typeEmailSpec = JsEnumBuilder.withName("phone_type")
                                     .withNamespace("example.com")
                                     .build("MOBILE","FIXED");
@@ -50,13 +108,6 @@ JsObjSpec personSpec =
                                         "contact", contactSpec
                                        )
                           );
-```
-
-## <a name="avro-schema"><a/> Avro schemas
-
-Create Avro schemas in a natural way, for example, from the `personSpec`:
-
-```code
 
 Schema schema = SpecToSchema.convert(personSpec);
 
@@ -150,21 +201,14 @@ Assertions.assertEquals(person,
 
 ```
 
-If the person JSON conforms to the spec, you are good. During testing, if the object doesn't conform to the spec,
-you'll get an assertion error, freeing you from checking this in every test you write. The serializer and deserializer
-builder have more options to define an `EncoderFactory` different than the default one or to specify `BinaryEncoder` to
-be reused.
+If the person JSON conforms to the spec, you are good. During testing, if the object doesn't conform to the spec, you'll get an assertion error, freeing you from checking this in every test you write. The serializer and deserializer builder have more options to define an `EncoderFactory` different than the default one or to specify `BinaryEncoder` to be reused.
 
 ## <a name="recursive-schema"><a/> More elaborated example with recursive schemas
 
-The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance
-and the generation of structured data in Java. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and
-validating against specifications.
+The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance and the generation of structured data in Java. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and validating against specifications.
 
-In this example, picked
-from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
-we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific
-attributes, and we use inheritance to share common fields across all device types.
+In this example, picked from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
+we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific attributes, and we use inheritance to share common fields across all device types.
 
 ```code 
 String NAME_FIELD = "name";
@@ -392,12 +436,7 @@ and the Avro schema would be:
 
 **Monitoring Avro Spec Deserialization with JFR Events**
 
-When debugging is enabled for the Avro Spec Deserializer, the library emits Java Flight Recorder (JFR) events to provide
-insights into the deserialization process. These events, captured by the `AvroSpecDeserializerEvent`, include details
-about successful deserializations, encountered errors, and associated exception details. Counters keep track of the
-overall success and error counts, aiding in monitoring and performance analysis. Integrating JFR events provides a
-valuable tool for developers to gain visibility into the Avro spec deserialization workflow and diagnose issues
-effectively.
+When debugging is enabled for the Avro Spec Deserializer, the library emits Java Flight Recorder (JFR) events to provide insights into the deserialization process. These events, captured by the `AvroSpecDeserializerEvent`, include details about successful deserializations, encountered errors, and associated exception details. Counters keep track of the overall success and error counts, aiding in monitoring and performance analysis. Integrating JFR events provides a valuable tool for developers to gain visibility into the Avro spec deserialization workflow and diagnose issues effectively.
 
 ```code
 
@@ -411,11 +450,7 @@ SpecDeserializer deserializer =
 **Enabling Debugging for Avro Spec Serialization**
 
 The Avro Spec Serializer offers a built-in debugging feature that, when enabled, utilizes Java Flight Recorder (JFR)
-events to provide insights into the serialization process. By invoking the `enableDebug` method with a specified
-serializer name, the library generates events captured by the `AvroSpecSerializerEvent` class. These events furnish
-information about both successful serializations and encountered errors, including details of any exceptions that may
-have occurred. Utilizing counters for overall success and error counts, these events become valuable tools for
-monitoring and diagnosing issues during the Avro spec serialization workflow.
+events to provide insights into the serialization process. By invoking the `enableDebug` method with a specified serializer name, the library generates events captured by the `AvroSpecSerializerEvent` class. These events furnish information about both successful serializations and encountered errors, including details of any exceptions that may have occurred. Utilizing counters for overall success and error counts, these events become valuable tools for monitoring and diagnosing issues during the Avro spec serialization workflow.
 
 ```code
 
@@ -428,9 +463,7 @@ SpecSerializer serializer =
 
 ### Integration with Jio-Test for Real-time Debugging
 
-The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a
-convenient way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java
-Flight Recorder (JFR) events for Avro serialization and deserialization.
+The Avro-spec library seamlessly integrates with [Jio-Test](https://github.com/imrafaelmerino/JIO#jio-test), providing a convenient way to enable real-time debugging during testing. The `Debugger` class from Jio-Test is utilized to configure Java Flight Recorder (JFR) events for Avro serialization and deserialization.
 
 ### Usage Example
 
@@ -467,11 +500,7 @@ public class AvroSpecIntegrationTest {
 
 ```
 
-By simply integrating the `Debugger` extension from Jio-Test, you gain real-time insights into the Avro serialization
-and deserialization events. During the execution of tests involving JSON objects from json-values, the console output
-will provide detailed information about the serialization process. This includes the name of the serializer, the
-result (success or failure), the number of errors encountered, the number of successful operations, the duration of the
-operation, any exceptions that occurred, the thread involved, and the timestamp of the event.
+By simply integrating the `Debugger` extension from Jio-Test, you gain real-time insights into the Avro serialization and deserialization events. During the execution of tests involving JSON objects from json-values, the console output will provide detailed information about the serialization process. This includes the name of the serializer, the result (success or failure), the number of errors encountered, the number of successful operations, the duration of the operation, any exceptions that occurred, the thread involved, and the timestamp of the event.
 
 ```text
 
@@ -528,9 +557,9 @@ To include avro-spec in your project, add the corresponding dependency to your b
 ```xml
 
 <dependency>
-    <groupId>com.github.imrafaelmerino</groupId>
-    <artifactId>avro-spec</artifactId>
-    <version>0.4</version>
+  <groupId>com.github.imrafaelmerino</groupId>
+  <artifactId>avro-spec</artifactId>
+  <version>0.4</version>
 </dependency>
 
 ```

@@ -21,7 +21,7 @@ public final class AvroSerializerDebugger implements Consumer<RecordedEvent> {
 
   private AvroSerializerDebugger() {
   }
-
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_SUC = """
       ------ Avro-Serializer -----
       |  Result: %s
@@ -32,7 +32,7 @@ public final class AvroSerializerDebugger implements Consumer<RecordedEvent> {
       |  Event Start Time: %s
       ----------------------
       """;
-
+  @SuppressWarnings("InlineFormatString")
   private static final String FORMAT_ERR = """
       ------ Avro-Serializer -----
       |  Result: %s

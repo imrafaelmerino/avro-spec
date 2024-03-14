@@ -11,12 +11,11 @@ import jdk.jfr.Name;
 @Name("Confluent_Avro_Deserializer_Event")
 @Category({"avro-spec", "Kafka", "Confluent", "Deserializer"})
 @Description("Event for tracking deserialization of Avro Confluent Deserializer")
-final class ConfluentAvroDeserializerEvent extends Event {
+final class DeserializerEvent extends Event {
 
   private static final AtomicLong deserializerCounter = new AtomicLong(0);
 
   int bytes;
-  String schema;
   String topic;
   long counter = deserializerCounter.incrementAndGet();
   String result;

@@ -5,34 +5,42 @@ import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-import jsonvalues.JsObj;
+import jsonvalues.JsArray;
 import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
-import org.apache.avro.generic.GenericRecord;
+import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.SpecToAvroSchema;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericArray;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
-    implements Deserializer<JsObj> {
+// SuppressWarnings: these constructors are from confluent source code. Anyway, this-scape warning doesn't seem to be an issue to be concerned.
+@SuppressWarnings("this-escape")
+public abstract class JsArraySpecDeserializer extends AbstractKafkaAvroDeserializer
+    implements Deserializer<JsArray> {
 
 
-  final boolean isJFREnabled;
+  protected abstract JsSpec getSpec();
+
+  protected abstract boolean isJFREnabled();
+
+  private final Schema schema;
 
 
-  public JsObjDeserializer() {
-    isJFREnabled =
-        Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
-                                                "true"));
+  public JsArraySpecDeserializer() {
+    this.schema = SpecToAvroSchema.convert(getSpec());
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client) {
+  @SuppressWarnings("this-escape")
+  public JsArraySpecDeserializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props) {
+  public JsArraySpecDeserializer(SchemaRegistryClient client,
+                                 Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
@@ -46,9 +54,10 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
               null);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props,
-                           boolean isKey) {
+  @SuppressWarnings("this-escape")
+  public JsArraySpecDeserializer(SchemaRegistryClient client,
+                                 Map<String, ?> props,
+                                 boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -57,8 +66,8 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public JsObj deserialize(String topic,
-                           byte[] bytes) {
+  public JsArray deserialize(String topic,
+                             byte[] bytes) {
 
     return deserialize(Objects.requireNonNull(topic),
                        null,
@@ -67,14 +76,14 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public JsObj deserialize(String topic,
-                           Headers headers,
-                           byte[] bytes) {
+  public JsArray deserialize(String topic,
+                             Headers headers,
+                             byte[] bytes) {
     if (bytes == null) {
       return null;
     }
 
-    if (isJFREnabled) {
+    if (isJFREnabled()) {
       var event = new DeserializerEvent();
       event.begin();
       try {
@@ -82,7 +91,8 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
                                                    headers,
                                                    bytes);
         event.result = DeserializerEvent.RESULT.SUCCESS.name();
-        return AvroToJson.toJsObj(container);
+
+        return AvroToJson.toJsArray(container);
       } catch (Exception e) {
         event.result = DeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
@@ -101,19 +111,20 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
       var container = deserializeToAvroContainer(topic,
                                                  headers,
                                                  bytes);
-      return AvroToJson.toJsObj(container);
+
+      return AvroToJson.toJsArray(container);
     }
 
   }
 
-  private GenericRecord deserializeToAvroContainer(final String topic,
-                                                   final Headers headers,
-                                                   final byte[] bytes) {
-    return (GenericRecord) deserialize(Objects.requireNonNull(topic),
-                                       isKey,
-                                       headers,
-                                       Objects.requireNonNull(bytes),
-                                       null);
+  private GenericArray<?> deserializeToAvroContainer(final String topic,
+                                                     final Headers headers,
+                                                     final byte[] bytes) {
+    return (GenericArray<?>) deserialize(Objects.requireNonNull(topic),
+                                         isKey,
+                                         headers,
+                                         Objects.requireNonNull(bytes),
+                                         schema);
   }
 
 

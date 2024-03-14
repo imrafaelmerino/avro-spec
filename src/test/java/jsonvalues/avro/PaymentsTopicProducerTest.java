@@ -13,6 +13,8 @@ import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
 import jsonvalues.spec.JsonToAvro;
+import jsonvalues.spec.deserializers.confluent.avro.JsDeserializer;
+import jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer;
 import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -37,6 +39,25 @@ public class PaymentsTopicProducerTest {
   static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(60));
 
   final static KafkaProducer<String, GenericRecord> producer = createProducer();
+  final static KafkaProducer<String, JsObj> specProducer = createSpecProducer();
+
+  private static KafkaProducer<String, JsObj> createSpecProducer() {
+
+    Properties props = new Properties();
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+              StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+              PaymentSerializer.class);
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+              "localhost:29092");
+    props.put(SCHEMA_REGISTRY_URL_CONFIG,
+              "http://localhost:8081");
+    props.put(ProducerConfig.ACKS_CONFIG,
+              "all");
+    props.put(ProducerConfig.RETRIES_CONFIG,
+              0);
+    return new KafkaProducer<>(props);
+  }
 
   private static KafkaProducer<String, GenericRecord> createProducer() {
     Properties props = new Properties();
@@ -64,7 +85,22 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.deserializers.confluent.avro.JsonDeserializer.class);
+              JsDeserializer.class);
+    props.put(SCHEMA_REGISTRY_URL_CONFIG,
+              "http://localhost:8081");
+    return new KafkaConsumer<>(props);
+  }
+
+  private static KafkaConsumer<String, JsObj> createConsumerWithJsSpecDeserializer() {
+    Properties props = new Properties();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
+              "localhost:29092");
+    props.put(ConsumerConfig.GROUP_ID_CONFIG,
+              "group-json-spec-deserializer");
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+              StringDeserializer.class);
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+              PaymentDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -79,13 +115,62 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer.class);
+              JsObjDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
   }
 
   static String TOPIC = "transactions";
+
+  @Test
+  public void testCreateMessagesWithSpecProducer() throws InterruptedException {
+    Supplier<JsObj> gen = JsObjGen.of("id",
+                                      JsStrGen.alphabetic(),
+                                      "amount",
+                                      JsDoubleGen.arbitrary(100.0d,
+                                                            1000d)
+                                     )
+                                  .sample();
+    int RECORDS = 10;
+    try (specProducer) {
+      for (long i = 0; i < RECORDS; i++) {
+        final JsObj payment = gen.get();
+        final ProducerRecord<String, JsObj> record =
+            new ProducerRecord<>(TOPIC,
+                                 payment.getStr("id") + i,
+                                 payment);
+        specProducer.send(record);
+        Thread.sleep(1000L);
+      }
+
+      producer.flush();
+      System.out.printf("Successfully produced 10 messages to a topic called %s%n",
+                        TOPIC);
+
+    }
+
+    try (var consumer = createConsumerWithJsSpecDeserializer()) {
+      consumer.subscribe(List.of(TOPIC));
+      int consumed = 0;
+      while (true) {
+        var records = consumer.poll(Duration.ofMillis(500));
+        System.out.println("Consumed " + records.count() + " records.");
+        for (var record : records) {
+          System.out.printf("offset = %d, key = %s, value = %s%n",
+                            record.offset(),
+                            record.key(),
+                            record.value()
+                                  .toPrettyString()
+                           );
+        }
+        consumed += records.count();
+        if (consumed >= RECORDS) {
+          break;
+        }
+      }
+    }
+  }
 
   @Test
   public void testCreateMessages() throws InterruptedException {
@@ -154,5 +239,6 @@ public class PaymentsTopicProducerTest {
       }
     }
   }
+
 
 }
