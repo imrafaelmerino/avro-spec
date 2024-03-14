@@ -89,7 +89,7 @@ public final class JsArraySpecDeserializer extends AbstractSpecDeserializer {
                                                  reusedDecoder);
       GenericArray<?> record = reader.read(reusedArray,
                                            decoder);
-      JsArray decoded = AvroToJson.toJsArray(record);
+      JsArray decoded = AvroToJson.convert(record);
       assert spec.test(decoded)
                  .isEmpty() :
           "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: "

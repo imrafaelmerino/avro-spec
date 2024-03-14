@@ -123,7 +123,8 @@ public class PaymentsWithoutSchemaTopicProducerTest {
         var records = consumer.poll(Duration.ofMillis(500));
         System.out.println("Consumed " + records.count() + " records.");
         for (var record : records) {
-          byte[] bytes = record.value()
+          Bytes value = record.value();
+          byte[] bytes = value
                                .get();
           JsObj deserialized = specDeserializer.deserialize(bytes);
           System.out.printf("offset = %d, key = %s, value = %s%n",

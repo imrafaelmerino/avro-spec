@@ -18,6 +18,7 @@ import jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer;
 import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -188,8 +189,8 @@ public class PaymentsTopicProducerTest {
         final ProducerRecord<String, GenericRecord> record =
             new ProducerRecord<>(TOPIC,
                                  payment.getStr("id") + i,
-                                 JsonToAvro.toAvro(payment,
-                                                   Specs.paymentSpec));
+                                 JsonToAvro.convert(payment,
+                                                    Specs.paymentSpec));
         producer.send(record);
         Thread.sleep(1000L);
       }
@@ -223,7 +224,7 @@ public class PaymentsTopicProducerTest {
       consumer.subscribe(List.of(TOPIC));
       int consumed = 0;
       while (true) {
-        var records = consumer.poll(Duration.ofMillis(500));
+        ConsumerRecords<String, JsObj> records = consumer.poll(Duration.ofMillis(500));
         System.out.println("Consumed " + records.count() + " records.");
         for (var record : records) {
           System.out.printf("offset = %d, key = %s, value = %s%n",

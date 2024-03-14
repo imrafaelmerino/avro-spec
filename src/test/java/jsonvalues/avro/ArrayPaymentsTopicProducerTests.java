@@ -117,8 +117,8 @@ public class ArrayPaymentsTopicProducerTests {
         final ProducerRecord<Void, GenericArray<?>> record =
             new ProducerRecord<>(TOPIC,
                                  null,
-                                 JsonToAvro.toAvro(payments,
-                                                   Specs.arrayPaymentSpec));
+                                 JsonToAvro.convert(payments,
+                                                    Specs.arrayPaymentSpec));
         producer.send(record);
         Thread.sleep(1000L);
       }

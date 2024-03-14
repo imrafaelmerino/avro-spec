@@ -136,11 +136,11 @@ public class TestsObjDerSer {
                                Map<String, JsValue> defaults
                               ) {
 
-    GenericData.Record record = JsonToAvro.toAvro(input,
-                                                  spec);
+    GenericData.Record record = JsonToAvro.convert(input,
+                                                   spec);
 
     Assertions.assertTrue(equals(expected,
-                                 AvroToJson.toJsObj(record),
+                                 AvroToJson.convert(record),
                                  defaults
                                 ),
                           "input -> record -> !input");
@@ -159,11 +159,11 @@ public class TestsObjDerSer {
                                JsArray input
                               ) {
 
-    GenericData.Array<Object> arr = JsonToAvro.toAvro(input,
-                                                      spec);
+    GenericData.Array<Object> arr = JsonToAvro.convert(input,
+                                                       spec);
 
     Assertions.assertEquals(input,
-                            AvroToJson.toJsArray(arr),
+                            AvroToJson.convert(arr),
                             "input -> avro array -> !input");
 
     JsArraySpecParser parser = JsArraySpecParser.of(spec);
@@ -1216,11 +1216,11 @@ public class TestsObjDerSer {
 
     System.out.println(schema);
 
-    var record = JsonToAvro.toAvro(JsObj.empty(),
-                                   spec
-                                  );
+    var record = JsonToAvro.convert(JsObj.empty(),
+                                    spec
+                                   );
 
-    var obj = AvroToJson.toJsObj(record);
+    var obj = AvroToJson.convert(record);
 
     Assertions.assertEquals(JsObj.of("a",
                                      JsBinary.of(new byte[]{110, 111}),

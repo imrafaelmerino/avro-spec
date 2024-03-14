@@ -74,8 +74,8 @@ public abstract class JsSpecSerializer extends AbstractKafkaAvroSerializer imple
       try {
         var result = serializeContainer(Objects.requireNonNull(topic),
                                         headers,
-                                        JsonToAvro.toAvro(json,
-                                                          getSpec())
+                                        JsonToAvro.convert(json,
+                                                           getSpec())
                                        );
         event.result = ConfluentAvroSerializerEvent.RESULT.SUCCESS.name();
         event.bytes = result.length;
@@ -95,8 +95,8 @@ public abstract class JsSpecSerializer extends AbstractKafkaAvroSerializer imple
     } else {
       return serializeContainer(topic,
                                 headers,
-                                JsonToAvro.toAvro(json,
-                                                  getSpec())
+                                JsonToAvro.convert(json,
+                                                   getSpec())
                                );
     }
   }

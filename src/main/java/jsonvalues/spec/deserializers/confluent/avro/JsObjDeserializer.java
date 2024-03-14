@@ -82,7 +82,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
                                                    headers,
                                                    bytes);
         event.result = DeserializerEvent.RESULT.SUCCESS.name();
-        return AvroToJson.toJsObj(container);
+        return AvroToJson.convert(container);
       } catch (Exception e) {
         event.result = DeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
@@ -101,7 +101,7 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
       var container = deserializeToAvroContainer(topic,
                                                  headers,
                                                  bytes);
-      return AvroToJson.toJsObj(container);
+      return AvroToJson.convert(container);
     }
 
   }

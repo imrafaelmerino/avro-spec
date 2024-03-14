@@ -44,15 +44,15 @@ public final class JsonToAvro {
   private JsonToAvro() {
   }
 
-  public static GenericContainer toAvro(Json<?> json,
-                                        JsSpec spec) {
+  public static GenericContainer convert(Json<?> json,
+                                         JsSpec spec) {
     GenericContainer record = null;
     if (json instanceof JsObj obj) {
-      record = JsonToAvro.toAvro(obj,
-                                 spec);
+      record = JsonToAvro.convert(obj,
+                                  spec);
     } else if (json instanceof JsArray array) {
-      record = JsonToAvro.toAvro(array,
-                                 spec);
+      record = JsonToAvro.convert(array,
+                                  spec);
     }
     return record;
 
@@ -67,9 +67,9 @@ public final class JsonToAvro {
    * @throws SpecNotSupportedInAvroException if the provided spec is not supported in Avro.
    * @throws JsonToAvroException             if an error occurs during conversion.
    */
-  public static GenericData.Array<Object> toAvro(final JsArray arr,
-                                                 final JsSpec spec
-                                                ) {
+  public static GenericData.Array<Object> convert(final JsArray arr,
+                                                  final JsSpec spec
+                                                 ) {
 
     try {
       assert spec.test(arr)
@@ -80,8 +80,8 @@ public final class JsonToAvro {
 
       assert AvroSpecFun.debugNonNull(schema);
 
-      return toAvro(arr,
-                    schema);
+      return convert(arr,
+                     schema);
     } catch (SpecNotSupportedInAvroException | JsonToAvroException | MetadataNotFoundException
              | SpecToSchemaException e) {
       throw e;
@@ -100,9 +100,9 @@ public final class JsonToAvro {
    * @throws SpecNotSupportedInAvroException if the provided spec is not supported in Avro.
    * @throws JsonToAvroException             if an error occurs during conversion.
    */
-  public static GenericData.Record toAvro(final JsObj obj,
-                                          final JsSpec spec
-                                         ) {
+  public static GenericData.Record convert(final JsObj obj,
+                                           final JsSpec spec
+                                          ) {
     try {
       assert spec.test(obj)
                  .isEmpty() : "The JsObj doesn't conform the spec. Errors: %s".formatted(spec.test(obj));
@@ -137,9 +137,9 @@ public final class JsonToAvro {
    * @return The converted Avro data as a GenericData.Array.
    * @throws JsonToAvroException if an error occurs during conversion.
    */
-  static GenericData.Array<Object> toAvro(final JsArray jsArray,
-                                          final Schema schema
-                                         ) {
+  static GenericData.Array<Object> convert(final JsArray jsArray,
+                                           final Schema schema
+                                          ) {
     try {
       assert (schema.getType() == Schema.Type.ARRAY ||
               (schema.getType() == Schema.Type.UNION && unionContain(schema,
@@ -149,9 +149,9 @@ public final class JsonToAvro {
                                               arrSchema);
       for (int i = 0; i < jsArray.size(); i++) {
         avroArray.add(i,
-                      toAvro(jsArray.get(i),
-                             arrSchema.getElementType()
-                            ));
+                      convert(jsArray.get(i),
+                              arrSchema.getElementType()
+                             ));
       }
       assert GenericData.get()
                         .validate(schema,
@@ -174,8 +174,8 @@ public final class JsonToAvro {
       Map<String, Object> map = new HashMap<>();
       for (var key : obj.keySet()) {
         map.put(key,
-                toAvro(obj.get(key),
-                       schema.getValueType()));
+                convert(obj.get(key),
+                        schema.getValueType()));
       }
       return map;
     } catch (SpecNotSupportedInAvroException | JsonToAvroException | MetadataNotFoundException
@@ -186,9 +186,9 @@ public final class JsonToAvro {
     }
   }
 
-  static Object toAvro(final JsObj obj,
-                       final Schema schema
-                      ) {
+  static Object convert(final JsObj obj,
+                        final Schema schema
+                       ) {
 
     if (schema.getType() == Schema.Type.MAP) {
       return toMap(obj,
@@ -199,8 +199,8 @@ public final class JsonToAvro {
     } else if (schema.isUnion()) {
       for (Schema type : schema.getTypes()) {
         try {
-          return toAvro(obj,
-                        type);
+          return convert(obj,
+                         type);
         } catch (Exception e) {
           AvroSpecFun.debugNonNull(e);
         }
@@ -261,15 +261,15 @@ public final class JsonToAvro {
                                obj);
         if (value.isNotNothing()) {
           builder.set(field,
-                      toAvro(value,
-                             field.schema()));
+                      convert(value,
+                              field.schema()));
         } else if (!field.hasDefaultValue()) {
           throw new JsonToAvroException(FIELD_VALUE_NOT_FOUND.formatted(field.name()));
         }
       } else {
         builder.set(field,
-                    toAvro(value,
-                           field.schema()));
+                    convert(value,
+                            field.schema()));
       }
     }
     return builder.build();
@@ -287,8 +287,8 @@ public final class JsonToAvro {
   }
 
 
-  static Object toAvro(JsValue value,
-                       Schema schema) {
+  static Object convert(JsValue value,
+                        Schema schema) {
     if (value instanceof JsStr js) {
       return toAvroStr(schema,
                        js);
@@ -322,12 +322,12 @@ public final class JsonToAvro {
                           js);
     }
     if (value instanceof JsObj js) {
-      return toAvro(js,
-                    schema);
+      return convert(js,
+                     schema);
     }
     if (value instanceof JsArray js) {
-      return toAvro(js,
-                    schema);
+      return convert(js,
+                     schema);
     }
     throw new JsonToAvroException(JS_VALUE_TYPE_NOT_SUPPORTED.formatted(value.getClass()
                                                                              .getName()));

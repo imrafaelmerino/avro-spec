@@ -13,7 +13,6 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.kafka.common.serialization.Serializer;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -80,8 +79,8 @@ public final class JsSpecSerializer  {
         "The json object doesn't conform the spec. Errors: %s".formatted(spec.test(json));
 
     try {
-      GenericContainer record = JsonToAvro.toAvro(json,
-                                                  spec);
+      GenericContainer record = JsonToAvro.convert(json,
+                                                   spec);
       try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
         var encoder = factory.binaryEncoder(stream,
                                             reused);

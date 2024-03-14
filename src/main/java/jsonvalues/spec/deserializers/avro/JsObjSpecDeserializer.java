@@ -87,7 +87,7 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
                                                  reusedDecoder);
       GenericRecord record = reader.read(reusedRecord,
                                          decoder);
-      JsObj decoded = AvroToJson.toJsObj(record);
+      JsObj decoded = AvroToJson.convert(record);
       assert spec.test(decoded)
                  .isEmpty() :
           "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: %s".formatted(spec.test(decoded));

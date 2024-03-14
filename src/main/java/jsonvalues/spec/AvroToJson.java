@@ -62,7 +62,7 @@ public final class AvroToJson {
    * @return The JsObj value representing the GenericRecord.
    * @throws AvroToJsonException if an error occurs during conversion.
    */
-  public static JsObj toJsObj(final GenericRecord record) {
+  public static JsObj convert(final GenericRecord record) {
     try {
       Schema schema = requireNonNull(record).getSchema();
       JsObj result = JsObj.empty();
@@ -93,7 +93,7 @@ public final class AvroToJson {
    * @return The JsArray value representing the GenericArray.
    * @throws AvroToJsonException if an error occurs during conversion.
    */
-  public static JsArray toJsArray(final GenericArray<?> genericArray) {
+  public static JsArray convert(final GenericArray<?> genericArray) {
     try {
       JsArray array = JsArray.empty();
       Schema elementType = requireNonNull(genericArray)
@@ -112,7 +112,7 @@ public final class AvroToJson {
     }
   }
 
-  static JsObj toJsObj(Map<?, ?> value,
+  static JsObj convert(Map<?, ?> value,
                        Schema schema) {
     try {
       JsObj jsObj = JsObj.empty();
@@ -246,7 +246,7 @@ public final class AvroToJson {
 
     if (type == Schema.Type.RECORD) {
       if (value instanceof GenericRecord) {
-        return toJsObj((GenericRecord) value);
+        return convert((GenericRecord) value);
       } else {
         throw new AvroToJsonException(RECORD_EXPECTED);
       }
@@ -254,7 +254,7 @@ public final class AvroToJson {
 
     if (type == Schema.Type.ARRAY) {
       if (value instanceof GenericArray<?>) {
-        return toJsArray((GenericArray<?>) value);
+        return convert((GenericArray<?>) value);
       } else {
         throw new AvroToJsonException(ARRAY_EXPECTED);
       }
@@ -262,7 +262,7 @@ public final class AvroToJson {
 
     if (type == Schema.Type.MAP) {
       if (value instanceof Map) {
-        return toJsObj(((Map<?, ?>) value),
+        return convert(((Map<?, ?>) value),
                        schema);
       } else {
         throw new AvroToJsonException(MAP_EXPECTED);
