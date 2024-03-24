@@ -15,7 +15,7 @@
 
 Create Avro schemas in a natural way, for example, from the `personSpec`:
 
-```code
+```java
 
 JsSpec typeEmailSpec = JsEnumBuilder.withName("phone_type")
                                     .withNamespace("example.com")
@@ -125,7 +125,7 @@ The [json-values](https://github.com/imrafaelmerino/json-values/) library simpli
 In this example, picked from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
 we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific attributes, and we use inheritance to share common fields across all device types.
 
-```code
+```java
 
     String NAME_FIELD = "name";
     String TYPE_FIELD = "type";
@@ -343,7 +343,7 @@ Let's see how to do conversions between json-values and Avro objects.
 
 From JSON to Avro using specs
 
-```code
+```java
 
 JsObj obj = ???;
 JsSpec objSpec = ???;
@@ -361,7 +361,7 @@ GenericContainer container = JsonToAvro.convert(json, jsonSpec);
 
 From JSON to Avro using Avro schemas
 
-```code
+```java
 
 JsObj obj = ???;
 Schema objSchema = ???;
@@ -383,7 +383,7 @@ Object object = JsonToAvro.convertValue(value, valueSchema);
 
 And from JSON to Avro:
 
-```code
+```java
 GenericData.Record record = ???;
 JsObj obj = AvroToJson.convert(record);
 
@@ -431,7 +431,7 @@ And the following deserializers:
 
 Let's consider the following example where we have a topic named "payments":
 
-```
+```java
  String TOPIC = "payments";
 
  JsObjSpec paymentSpec =
@@ -455,7 +455,7 @@ When working with Kafka, **using a single producer for all topics** is highly re
 
 1. `jsonvalues.spec.confluent.ConfluentSerializer` for Avro Format with Schema Registry Integration:
 
-```code
+```java
  private static KafkaProducer<String, GenericRecord> createProducer() {
     Properties props = new Properties();
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -501,7 +501,7 @@ In the first case, we're using `jsonvalues.spec.confluent.ConfluentSerializer` a
 
 2. `jsonvalues.spec.serializers.SpecSerializer` for Avro Format without Schema Registry integration:
 
-```code
+```java
  private static KafkaProducer<String, byte[]> createProducer() {
     Properties props = new Properties();
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -550,7 +550,7 @@ If you have **one specific producer for a topic**, because the topic requires a 
 1. `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer` for Avro format and integration with Confluent Schema Registry In this case you need to create a new class and extend `JsSpecSerializer`
    providing the spec. Find below and example:
 
-```code
+```java
 
 public final class PaymentSerializer extends ConfluentSpecSerializer {
 
@@ -602,7 +602,7 @@ In this setup, you create a new class `PaymentSerializer` by extending `Confluen
 
 2. `jsonvalues.spec.serializers.SpecSerializer` for Avro format without Schema registry. In this case, we use the `org.apache.kafka.common.serialization.ByteArraySerializer` from Kafka as the value serializer for the producer. Additionally, we employ the `JsSpecSerializer` created using a builder to convert JSON objects into bytes in Avro format before sending them to the Kafka topic.
 
-```code
+```java
 private static KafkaProducer<String, byte[]> createProducer() {
     Properties props = new Properties();
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -657,7 +657,7 @@ What about deserializers?
 
 Example using `ConfluentObjDeserializer`:
 
-```code
+```java
 
 private static KafkaConsumer<String, JsObj> createPaymentDeserializer() {
     Properties props = new Properties();
@@ -695,7 +695,7 @@ try (var consumer = createConsumerWithJsonObjDeserializer()) {
 
 Example using a spec deserializer:
 
-```code
+```java
 
 //must create a new deserializer extending ConfluentObjSpecDeserializer
 public final class PaymentDeserializer extends ConfluentObjSpecDeserializer {
@@ -739,7 +739,7 @@ In this second example, it's important to note that every deserialized object ad
 
 Below is an example demonstrating the usage of a `ByteArrayDeserializer` from Kafka along with a spec deserializer to convert bytes into a JsObj and consume a Kafka topic:
 
-```code
+```java
 
   private static KafkaConsumer<String, Bytes> createConsumer() {
     Properties props = new Properties();
@@ -791,7 +791,7 @@ All the serializers and deserializers in this library support Java Flight Record
 
 There are four predefined formatters, which are functions that format the events into a string. Consider the following example to log some events using a JFR stream:
 
- ```code
+ ```java
  RecordingStream rs = new RecordingStream();
  
  rs.setOrdered(true);
@@ -812,7 +812,7 @@ There are four predefined formatters, which are functions that format the events
 
 If you are using [jio-test](), create a debugger in your test specifying the stream duration, and you will see the events printed out on the console
 
-```code
+```java
 
 @RegisterExtension
 static Debugger debugger = Debugger.of(Duration.ofSeconds(5));
