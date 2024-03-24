@@ -120,7 +120,7 @@ Resulting Schema:
 
 ## <a name="recursive-schema"><a/> More elaborated example with recursive schemas
 
-The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance and the generation of structured data in Java. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and validating against specifications.
+The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance and the generation of structured data in JSON. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and validating against specifications.
 
 In this example, picked from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
 we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific attributes, and we use inheritance to share common fields across all device types.
