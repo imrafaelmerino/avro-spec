@@ -1,4 +1,4 @@
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.6)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0-RC1/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/1.0.0-RC1)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0-RC1/jar)
 
 - [Avro spec](#avro-spec)
 - [Avro schemas](#avro-schema)
