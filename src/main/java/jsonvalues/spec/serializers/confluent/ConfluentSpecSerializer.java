@@ -1,4 +1,4 @@
-package jsonvalues.spec.serializers.confluent.avro;
+package jsonvalues.spec.serializers.confluent;
 
 
 import io.confluent.kafka.schemaregistry.avro.AvroSchema;
@@ -8,31 +8,44 @@ import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import jsonvalues.Json;
 import jsonvalues.spec.AvroSpecFun;
+import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.JsonToAvro;
+import jsonvalues.spec.SpecToAvroSchema;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serializer;
 
-public final class GenericContainerSerializer extends AbstractKafkaAvroSerializer implements
-                                                                                  Serializer<GenericContainer> {
-  public static final GenericContainerSerializer DEFAULT = new GenericContainerSerializer();
-  final boolean isJFREnabled;
+/**
+ * Abstract serializer for JSON values using Avro and integrating with Kafka Schema Registry from Confluent. This
+ * serializer extends {@link io.confluent.kafka.serializers.AbstractKafkaAvroSerializer} and implements
+ * {@link org.apache.kafka.common.serialization.Serializer}. It provides serialization functionality for
+ * {@link jsonvalues.Json} instances based on a specified JSON validation {@link jsonvalues.spec.JsSpec}.
+ */
+// SuppressWarnings: these constructors are from confluent source code. Anyway, this-scape warning doesn't seem to be an issue to be concerned.
+@SuppressWarnings("this-escape")
+public abstract class ConfluentSpecSerializer extends AbstractKafkaAvroSerializer implements Serializer<Json<?>> {
 
-  public GenericContainerSerializer() {
-    isJFREnabled =
-        Boolean.parseBoolean(System.getProperty("avro.spec.confluent.serializer.jfr.enabled",
-                                                "true")
-                            );
+  protected abstract boolean isJFREnabled();
+
+  protected abstract JsSpec getSpec();
+
+  final AvroSchema schema;
+
+  public ConfluentSpecSerializer() {
+    schema = new AvroSchema(SpecToAvroSchema.convert(getSpec()));
   }
 
-  public GenericContainerSerializer(SchemaRegistryClient client) {
+
+  public ConfluentSpecSerializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public GenericContainerSerializer(SchemaRegistryClient client,
-                                    Map<String, ?> props) {
+  public ConfluentSpecSerializer(SchemaRegistryClient client,
+                                 Map<String, ?> props) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
@@ -47,32 +60,34 @@ public final class GenericContainerSerializer extends AbstractKafkaAvroSerialize
   }
 
   @Override
-  public byte[] serialize(String topic,
-                          GenericContainer data) {
+  public byte[] serialize(final String topic,
+                          final Json<?> data) {
     return this.serialize(Objects.requireNonNull(topic),
                           null,
                           Objects.requireNonNull(data));
   }
 
   @Override
-  public byte[] serialize(String topic,
-                          Headers headers,
-                          GenericContainer container) {
-    if (container == null) {
+  public byte[] serialize(final String topic,
+                          final Headers headers,
+                          final Json<?> json) {
+    if (json == null) {
       return null;
     }
-    if (isJFREnabled) {
-      var event = new ConfluentAvroSerializerEvent();
+    if (isJFREnabled()) {
+      var event = new ConfluentSerializerEvent();
       event.begin();
       try {
         var result = serializeContainer(Objects.requireNonNull(topic),
                                         headers,
-                                        container);
-        event.result = ConfluentAvroSerializerEvent.RESULT.SUCCESS.name();
+                                        JsonToAvro.convert(json,
+                                                           getSpec())
+                                       );
+        event.result = ConfluentSerializerEvent.RESULT.SUCCESS.name();
         event.bytes = result.length;
         return result;
       } catch (Exception e) {
-        event.result = ConfluentAvroSerializerEvent.RESULT.FAILURE.name();
+        event.result = ConfluentSerializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;
@@ -83,18 +98,18 @@ public final class GenericContainerSerializer extends AbstractKafkaAvroSerialize
           event.commit();
         }
       }
-
     } else {
       return serializeContainer(topic,
                                 headers,
-                                container);
+                                JsonToAvro.convert(json,
+                                                   getSpec())
+                               );
     }
   }
 
   private byte[] serializeContainer(final String topic,
                                     final Headers headers,
                                     final GenericContainer record) {
-    AvroSchema schema = new AvroSchema(record.getSchema());
     return serializeImpl(getSubjectName(topic,
                                         isKey,
                                         record,

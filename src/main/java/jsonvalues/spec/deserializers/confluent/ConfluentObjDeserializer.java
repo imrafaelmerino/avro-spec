@@ -1,4 +1,4 @@
-package jsonvalues.spec.deserializers.confluent.avro;
+package jsonvalues.spec.deserializers.confluent;
 
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
@@ -12,43 +12,49 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
+/**
+ * Deserializer for deserializing Kafka messages into JSON objects (JsObj). This class extends the
+ * {@link AbstractKafkaAvroDeserializer} class from the Confluent Kafka Avro library. It implements the
+ * {@link Deserializer} interface for deserializing Kafka messages into JSON objects (JsObj). It's integrated with the
+ * Java Flight Recorder (JFR) for debugging and monitoring Avro deserialization events (use the property
+ * "avro.spec.confluent.deserializer.jfr.enabled" to enable or disable JFR integration). It's also integrated with the
+ * Confluent Schema Registry for deserializing Avro messages.
+ */
+public final class ConfluentObjDeserializer extends AbstractKafkaAvroDeserializer
     implements Deserializer<JsObj> {
-
 
   final boolean isJFREnabled;
 
-
-  public JsObjDeserializer() {
+  public ConfluentObjDeserializer() {
     isJFREnabled =
         Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
                                                 "true"));
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client) {
+  public ConfluentObjDeserializer(final SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props) {
+  public ConfluentObjDeserializer(final SchemaRegistryClient client,
+                                  final Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
   }
 
   @Override
-  public void configure(Map<String, ?> props,
-                        boolean isKey) {
+  public void configure(final Map<String, ?> props,
+                        final boolean isKey) {
     this.isKey = isKey;
     configure(deserializerConfig(Objects.requireNonNull(props)),
               null);
   }
 
-  public JsObjDeserializer(SchemaRegistryClient client,
-                           Map<String, ?> props,
-                           boolean isKey) {
+  public ConfluentObjDeserializer(final SchemaRegistryClient client,
+                                  final Map<String, ?> props,
+                                  final boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -57,8 +63,8 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public JsObj deserialize(String topic,
-                           byte[] bytes) {
+  public JsObj deserialize(final String topic,
+                           final byte[] bytes) {
 
     return deserialize(Objects.requireNonNull(topic),
                        null,
@@ -67,24 +73,24 @@ public final class JsObjDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public JsObj deserialize(String topic,
-                           Headers headers,
-                           byte[] bytes) {
+  public JsObj deserialize(final String topic,
+                           final Headers headers,
+                           final byte[] bytes) {
     if (bytes == null) {
       return null;
     }
 
     if (isJFREnabled) {
-      var event = new DeserializerEvent();
+      var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
                                                    headers,
                                                    bytes);
-        event.result = DeserializerEvent.RESULT.SUCCESS.name();
+        event.result = ConfluentDeserializerEvent.RESULT.SUCCESS.name();
         return AvroToJson.convert(container);
       } catch (Exception e) {
-        event.result = DeserializerEvent.RESULT.FAILURE.name();
+        event.result = ConfluentDeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;

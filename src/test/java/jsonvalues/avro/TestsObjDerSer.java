@@ -32,17 +32,14 @@ import static jsonvalues.spec.JsSpecs.str;
 import fun.gen.Combinators;
 import fun.gen.Gen;
 import fun.gen.StrGen;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jio.test.junit.Debugger;
 import jio.test.pbt.PropBuilder;
 import jio.test.pbt.TestFailure;
 import jio.test.pbt.TestResult;
@@ -80,22 +77,19 @@ import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.SpecToAvroSchema;
 import jsonvalues.spec.SpecToJsonSchema;
 import jsonvalues.spec.SpecToSchemaException;
-import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer;
-import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializerBuilder;
-import jsonvalues.spec.serializers.avro.JsSpecSerializer;
-import jsonvalues.spec.serializers.avro.JsSpecSerializerBuilder;
+import jsonvalues.spec.deserializers.ObjSpecDeserializer;
+import jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder;
+import jsonvalues.spec.serializers.SpecSerializer;
+import jsonvalues.spec.serializers.SpecSerializerBuilder;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 
 public class TestsObjDerSer {
 
 
-  @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(5));
   Supplier<String> nameGen = StrGen.alphabetic(10,
                                                20)
                                    .sample();
@@ -211,20 +205,16 @@ public class TestsObjDerSer {
                                      JsObj expected,
                                      Map<String, JsValue> defaults) {
 
-
-    JsSpecSerializer specSerializer =
-        JsSpecSerializerBuilder.of(spec)
-                               .build();
-    JsObjSpecDeserializer jsObjSpecDeserializer =
-        JsObjSpecDeserializerBuilder.of(spec)
-                                    .build();
-
-
+    SpecSerializer specSerializer =
+        SpecSerializerBuilder.of(spec)
+                             .build();
+    ObjSpecDeserializer jsObjSpecDeserializer =
+        ObjSpecDeserializerBuilder.of(spec)
+                                  .build();
 
     Assertions.assertTrue(equals(expected,
                                  jsObjSpecDeserializer.deserialize(specSerializer.serialize(input)),
                                  defaults));
-
 
 
   }
@@ -1354,10 +1344,10 @@ public class TestsObjDerSer {
                            .withAllOptKeys()
                            .withAllNullValues();
 
-    JsSpecSerializer serializer = JsSpecSerializerBuilder.of(recordSpec)
-                                                         .build();
-    JsObjSpecDeserializer deserializer = JsObjSpecDeserializerBuilder.of(recordSpec)
-                                                                     .build();
+    SpecSerializer serializer = SpecSerializerBuilder.of(recordSpec)
+                                                     .build();
+    ObjSpecDeserializer deserializer = ObjSpecDeserializerBuilder.of(recordSpec)
+                                                                 .build();
 
     Function<JsObj, TestResult> fun = obj -> {
       JsObj xs = deserializer.deserialize(serializer.serialize(obj));
@@ -1377,7 +1367,7 @@ public class TestsObjDerSer {
 
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args)  {
     String NAME_FIELD = "name";
     String TYPE_FIELD = "type";
     String BUTTON_COUNT_FIELD = "buttonCount";

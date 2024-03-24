@@ -6,16 +6,15 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
-import jio.test.junit.Debugger;
 import jsonvalues.JsObj;
 import jsonvalues.Json;
 import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
 import jsonvalues.spec.JsonToAvro;
-import jsonvalues.spec.deserializers.confluent.avro.JsDeserializer;
-import jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer;
-import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
+import jsonvalues.spec.deserializers.confluent.ConfluentDeserializer;
+import jsonvalues.spec.deserializers.confluent.ConfluentObjDeserializer;
+import jsonvalues.spec.serializers.confluent.ConfluentSerializer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -25,8 +24,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * The following schema has been set in the topic "payments" in the kafka cluster.
@@ -34,10 +33,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * { "namespace": "io.confluent.examples.clients.basicavro", "type": "record", "name": "Payment", "fields": [ {"name":
  * "id", "type": "string"}, {"name": "amount", "type": "double"} ] }
  */
+@Disabled
 public class PaymentsTopicProducerTest {
-
-  @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(60));
 
   final static KafkaProducer<String, GenericRecord> producer = createProducer();
   final static KafkaProducer<String, JsObj> specProducer = createSpecProducer();
@@ -65,7 +62,7 @@ public class PaymentsTopicProducerTest {
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
               StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-              GenericContainerSerializer.class);
+              ConfluentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
@@ -86,7 +83,9 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              JsDeserializer.class);
+              ConfluentDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -102,6 +101,8 @@ public class PaymentsTopicProducerTest {
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               PaymentDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -115,8 +116,10 @@ public class PaymentsTopicProducerTest {
               "group-jsobj-deserializer");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               StringDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              JsObjDeserializer.class);
+              ConfluentObjDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -141,7 +144,7 @@ public class PaymentsTopicProducerTest {
             new ProducerRecord<>(TOPIC,
                                  payment.getStr("id") + i,
                                  payment);
-        specProducer.send(record);
+        var unused = specProducer.send(record);
         Thread.sleep(1000L);
       }
 
@@ -191,7 +194,7 @@ public class PaymentsTopicProducerTest {
                                  payment.getStr("id") + i,
                                  JsonToAvro.convert(payment,
                                                     Specs.paymentSpec));
-        producer.send(record);
+        var unused = producer.send(record);
         Thread.sleep(1000L);
       }
 

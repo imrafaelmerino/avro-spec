@@ -1,55 +1,63 @@
-package jsonvalues.spec.deserializers.confluent.avro;
-
+package jsonvalues.spec.deserializers.confluent;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import jsonvalues.Json;
+import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
-import jsonvalues.spec.deserializers.confluent.avro.DeserializerEvent.RESULT;
+import jsonvalues.spec.deserializers.confluent.ConfluentDeserializerEvent.RESULT;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsDeserializer extends AbstractKafkaAvroDeserializer
+/**
+ * Deserializer for deserializing Kafka messages into JSON (JsObj or JsArray). This class extends the
+ * {@link AbstractKafkaAvroDeserializer} class from the Confluent Kafka Avro library. It implements the
+ * {@link Deserializer} interface for deserializing Kafka messages into JSON. It's integrated with the Java Flight
+ * Recorder (JFR) for debugging and monitoring Avro deserialization events (use the property
+ * "avro.spec.confluent.deserializer.jfr.enabled" to enable or disable JFR integration). It's also integrated with the
+ * Confluent Schema Registry for deserializing Avro messages.
+ */
+public final class ConfluentDeserializer extends AbstractKafkaAvroDeserializer
     implements Deserializer<Json<?>> {
 
   final boolean isJFREnabled;
 
 
-  public JsDeserializer() {
+  public ConfluentDeserializer() {
     isJFREnabled =
         Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
                                                 "true"));
   }
 
-  public JsDeserializer(SchemaRegistryClient client) {
+  public ConfluentDeserializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsDeserializer(SchemaRegistryClient client,
-                        Map<String, ?> props) {
+  public ConfluentDeserializer(final SchemaRegistryClient client,
+                               final Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
   }
 
   @Override
-  public void configure(Map<String, ?> props,
-                        boolean isKey) {
+  public void configure(final Map<String, ?> props,
+                        final boolean isKey) {
     this.isKey = isKey;
     configure(deserializerConfig(Objects.requireNonNull(props)),
               null);
   }
 
-  public JsDeserializer(SchemaRegistryClient client,
-                        Map<String, ?> props,
-                        boolean isKey) {
+  public ConfluentDeserializer(final SchemaRegistryClient client,
+                               final Map<String, ?> props,
+                               final boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -58,8 +66,8 @@ public final class JsDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public Json<?> deserialize(String topic,
-                             byte[] bytes) {
+  public Json<?> deserialize(final String topic,
+                             final byte[] bytes) {
 
     return deserialize(Objects.requireNonNull(topic),
                        null,
@@ -68,15 +76,15 @@ public final class JsDeserializer extends AbstractKafkaAvroDeserializer
   }
 
   @Override
-  public Json<?> deserialize(String topic,
-                             Headers headers,
-                             byte[] bytes) {
+  public Json<?> deserialize(final String topic,
+                             final Headers headers,
+                             final byte[] bytes) {
     if (bytes == null) {
       return null;
     }
 
     if (isJFREnabled) {
-      var event = new DeserializerEvent();
+      var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
@@ -87,12 +95,13 @@ public final class JsDeserializer extends AbstractKafkaAvroDeserializer
         return switch (container) {
           case GenericArray<?> array -> AvroToJson.convert(array);
           case GenericRecord record -> AvroToJson.convert(record);
-          default -> throw new IllegalStateException("Only GenericArray and GenericRecord are supported. Received type: " + container.getClass());
+          default -> throw new IllegalStateException(
+              "Only GenericArray and GenericRecord are supported. Received type: " + container.getClass());
         };
 
       } catch (Exception e) {
         event.result = RESULT.FAILURE.name();
-        event.exception = findUltimateCause(e).toString();
+        event.exception = AvroSpecFun.findUltimateCause(e).toString();
         throw e;
       } finally {
         event.end();
@@ -104,9 +113,9 @@ public final class JsDeserializer extends AbstractKafkaAvroDeserializer
       }
 
     } else {
-      return deserialize(Objects.requireNonNull(topic),
-                         Objects.requireNonNull(headers),
-                         Objects.requireNonNull(bytes));
+      return deserialize(topic,
+                         headers,
+                         bytes);
     }
 
   }
@@ -132,20 +141,5 @@ public final class JsDeserializer extends AbstractKafkaAvroDeserializer
     }
   }
 
-  /**
-   * Finds the ultimate cause in the exception chain or the exception if the cause is null.
-   *
-   * @param exception The initial exception to start the search from.
-   * @return The ultimate cause in the exception chain.
-   * @throws NullPointerException If the provided exception is {@code null}.
-   */
-  private Throwable findUltimateCause(Throwable exception) {
-    var ultimateCause = Objects.requireNonNull(exception);
 
-    while (ultimateCause.getCause() != null) {
-      ultimateCause = ultimateCause.getCause();
-    }
-
-    return ultimateCause;
-  }
 }

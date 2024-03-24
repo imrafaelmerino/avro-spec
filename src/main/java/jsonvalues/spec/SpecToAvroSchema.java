@@ -180,10 +180,7 @@ public final class SpecToAvroSchema {
     var fullName = spec.metaData.getFullName();
 
     if (avrocache.containsKey(fullName)) {
-      Schema schema = avrocache.get(fullName);
-      assert AvroSpecFun.debugNonNull(schema,
-                                      () -> "Schema " + schema.getFullName() + " was retrieved from cache");
-      return schema;
+      return avrocache.get(fullName);
     }
 
     try {
@@ -478,7 +475,7 @@ public final class SpecToAvroSchema {
       JsSpec cached = JsSpecCache.get(namedSpec.name);
       var alreadyParsed = parsedSchemas.contains(namedSpec.name);
       if (alreadyParsed && (cached instanceof JsObjSpec || cached instanceof JsEnum
-                            || cached instanceof JsFixedBinary)) //only object, enum an fixed can be referenced by name in avro
+                            || cached instanceof JsFixedBinary)) //only object, enum and fixed can be referenced by name in avro
       {
 
         return namedSchema(namedSpec.name,

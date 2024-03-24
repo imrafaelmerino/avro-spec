@@ -1,4 +1,4 @@
-package jsonvalues.spec.serializers.avro;
+package jsonvalues.spec.serializers;
 
 import java.util.concurrent.atomic.AtomicLong;
 import jdk.jfr.Category;
@@ -11,7 +11,7 @@ import jdk.jfr.Name;
 @Name("Avro_Serializer_Event")
 @Category({"avro-spec", "Avro", "Serializer"})
 @Description("Event for tracking serialization of Avro Serializer")
-final class AvroSerializerEvent extends Event {
+final class SerializerEvent extends Event {
 
   private static final AtomicLong serializerCounter = new AtomicLong(0);
   int bytes;

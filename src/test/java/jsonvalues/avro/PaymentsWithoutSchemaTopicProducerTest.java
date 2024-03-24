@@ -6,19 +6,18 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
-import jio.test.junit.Debugger;
 import jsonvalues.JsArray;
 import jsonvalues.JsObj;
 import jsonvalues.gen.JsArrayGen;
 import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
-import jsonvalues.spec.deserializers.avro.JsArraySpecDeserializer;
-import jsonvalues.spec.deserializers.avro.JsArraySpecDeserializerBuilder;
-import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer;
-import jsonvalues.spec.deserializers.avro.JsObjSpecDeserializerBuilder;
-import jsonvalues.spec.serializers.avro.JsSpecSerializer;
-import jsonvalues.spec.serializers.avro.JsSpecSerializerBuilder;
+import jsonvalues.spec.deserializers.ArraySpecDeserializer;
+import jsonvalues.spec.deserializers.ArraySpecDeserializerBuilder;
+import jsonvalues.spec.deserializers.ObjSpecDeserializer;
+import jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder;
+import jsonvalues.spec.serializers.SpecSerializer;
+import jsonvalues.spec.serializers.SpecSerializerBuilder;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -29,8 +28,8 @@ import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Bytes;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * The following schema has been set in the topic "transactions_without_schema" in the kafka cluster.
@@ -38,11 +37,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * { "namespace": "io.confluent.examples.clients.basicavro", "type": "record", "name": "Payment", "fields": [ {"name":
  * "id", "type": "string"}, {"name": "amount", "type": "double"} ] }
  */
+@Disabled
 public class PaymentsWithoutSchemaTopicProducerTest {
 
-  @RegisterExtension
-  static Debugger debugger =
-      MyDebuggers.avroDebugger(Duration.ofSeconds(30));
 
 
   private static KafkaProducer<String, byte[]> createProducer() {
@@ -72,6 +69,8 @@ public class PaymentsWithoutSchemaTopicProducerTest {
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               BytesDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+             "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -83,13 +82,13 @@ public class PaymentsWithoutSchemaTopicProducerTest {
 
   @Test
   public void testDerSerSpecPayment() throws InterruptedException {
-    JsSpecSerializer specSerializer =
-        JsSpecSerializerBuilder.of(Specs.paymentSpec)
-                               .build();
+    SpecSerializer specSerializer =
+        SpecSerializerBuilder.of(Specs.paymentSpec)
+                             .build();
 
-    JsObjSpecDeserializer specDeserializer =
-        JsObjSpecDeserializerBuilder.of(Specs.paymentSpec)
-                                    .build();
+    ObjSpecDeserializer specDeserializer =
+        ObjSpecDeserializerBuilder.of(Specs.paymentSpec)
+                                  .build();
     Supplier<JsObj> gen = JsObjGen.of("id",
                                       JsStrGen.alphabetic(),
                                       "amount",
@@ -106,7 +105,7 @@ public class PaymentsWithoutSchemaTopicProducerTest {
             new ProducerRecord<>(TOPIC,
                                  payment.getStr("id") + i,
                                  specSerializer.serialize(payment));
-        producer.send(record);
+        var unused = producer.send(record);
         Thread.sleep(1000L);
       }
 
@@ -144,13 +143,13 @@ public class PaymentsWithoutSchemaTopicProducerTest {
 
   @Test
   public void testDerSerArrayOfSpecPayment() throws InterruptedException {
-    JsSpecSerializer specSerializer =
-        JsSpecSerializerBuilder.of(Specs.arrayPaymentSpec)
-                               .build();
+    SpecSerializer specSerializer =
+        SpecSerializerBuilder.of(Specs.arrayPaymentSpec)
+                             .build();
 
-    JsArraySpecDeserializer specDeserializer =
-        JsArraySpecDeserializerBuilder.of(Specs.arrayPaymentSpec)
-                                      .build();
+    ArraySpecDeserializer specDeserializer =
+        ArraySpecDeserializerBuilder.of(Specs.arrayPaymentSpec)
+                                    .build();
     Supplier<JsArray> gen = JsArrayGen.biased(JsObjGen.of("id",
                                                           JsStrGen.alphabetic(),
                                                           "amount",
@@ -169,7 +168,7 @@ public class PaymentsWithoutSchemaTopicProducerTest {
             new ProducerRecord<>(TOPIC,
                                  payments.size() + "",
                                  specSerializer.serialize(payments));
-        producer.send(record);
+        var unused = producer.send(record);
         Thread.sleep(1000L);
       }
 

@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
-import jio.test.junit.Debugger;
 import jsonvalues.JsArray;
 import jsonvalues.Json;
 import jsonvalues.gen.JsArrayGen;
@@ -14,9 +13,10 @@ import jsonvalues.gen.JsDoubleGen;
 import jsonvalues.gen.JsObjGen;
 import jsonvalues.gen.JsStrGen;
 import jsonvalues.spec.JsonToAvro;
-import jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer;
-import jsonvalues.spec.deserializers.confluent.avro.JsDeserializer;
-import jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer;
+import jsonvalues.spec.SpecToAvroSchema;
+import jsonvalues.spec.deserializers.confluent.ConfluentArrayDeserializer;
+import jsonvalues.spec.deserializers.confluent.ConfluentDeserializer;
+import jsonvalues.spec.serializers.confluent.ConfluentSerializer;
 import org.apache.avro.generic.GenericArray;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -25,13 +25,11 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.VoidDeserializer;
 import org.apache.kafka.common.serialization.VoidSerializer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled
 public class ArrayPaymentsTopicProducerTests {
-
-  @RegisterExtension
-  static Debugger debugger = MyDebuggers.avroDebugger(Duration.ofSeconds(30));
 
   final static KafkaProducer<Void, GenericArray<?>> producer = createProducer();
 
@@ -40,7 +38,7 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
               VoidSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-              GenericContainerSerializer.class);
+              ConfluentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
@@ -61,7 +59,9 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              JsDeserializer.class);
+              ConfluentDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -76,7 +76,9 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               VoidDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              JsArrayDeserializer.class);
+              ConfluentArrayDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -90,6 +92,8 @@ public class ArrayPaymentsTopicProducerTests {
               "group-js-array-spec-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               VoidDeserializer.class);
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+              "earliest");
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               ArrayPaymentDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
@@ -98,6 +102,7 @@ public class ArrayPaymentsTopicProducerTests {
   }
 
   static String TOPIC = "array_payments";
+
 
   @Test
   public void testCreateMessages() throws InterruptedException {
@@ -119,7 +124,7 @@ public class ArrayPaymentsTopicProducerTests {
                                  null,
                                  JsonToAvro.convert(payments,
                                                     Specs.arrayPaymentSpec));
-        producer.send(record);
+        var unused = producer.send(record);
         Thread.sleep(1000L);
       }
 

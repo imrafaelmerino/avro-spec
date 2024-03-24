@@ -1,9 +1,9 @@
-package jsonvalues.spec.serializers.avro;
+package jsonvalues.spec.serializers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Objects;
 import jsonvalues.Json;
+import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.SpecToAvroSchema;
@@ -18,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Thread-safe class for serializing JSON objects to Avro binary or JSON format based on a provided Avro schema.
  */
-public final class JsSpecSerializer  {
+public final class SpecSerializer {
+
   final JsSpec spec;
   final Schema schema;
   final BinaryEncoder reused;
@@ -27,17 +28,18 @@ public final class JsSpecSerializer  {
 
   final boolean isJFREnabled;
 
-  JsSpecSerializer(boolean isJFREnabled,
-                   JsSpec spec,
-                   BinaryEncoder reused,
-                   EncoderFactory factory
-                  ) {
+  SpecSerializer(boolean isJFREnabled,
+                 JsSpec spec,
+                 BinaryEncoder reused,
+                 EncoderFactory factory
+                ) {
     this.isJFREnabled = isJFREnabled;
     this.schema = SpecToAvroSchema.convert(spec);
     this.spec = spec;
     this.reused = reused;
     this.factory = factory;
     this.writer = new GenericDatumWriter<>(schema);
+
   }
 
 
@@ -50,16 +52,17 @@ public final class JsSpecSerializer  {
   public byte[] serialize(final Json<?> json) {
 
     if (isJFREnabled) {
-      var event = new AvroSerializerEvent();
+      var event = new SerializerEvent();
       event.begin();
       try {
         var result = binaryEncode(json);
-        event.result = AvroSerializerEvent.RESULT.SUCCESS.name();
+        event.result = SerializerEvent.RESULT.SUCCESS.name();
         event.bytes = result.length;
         return result;
       } catch (Exception e) {
-        event.result = AvroSerializerEvent.RESULT.FAILURE.name();
-        event.exception = findUltimateCause(e).toString();
+        event.result = SerializerEvent.RESULT.FAILURE.name();
+        event.exception = AvroSpecFun.findUltimateCause(e)
+                                     .toString();
         throw e;
       } finally {
         event.end();
@@ -81,7 +84,7 @@ public final class JsSpecSerializer  {
     try {
       GenericContainer record = JsonToAvro.convert(json,
                                                    spec);
-      try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+      try (var stream = new ByteArrayOutputStream()) {
         var encoder = factory.binaryEncoder(stream,
                                             reused);
         writer.write(record,
@@ -92,24 +95,6 @@ public final class JsSpecSerializer  {
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
-  }
-
-
-  /**
-   * Finds the ultimate cause in the exception chain or the exception if the cause is null.
-   *
-   * @param exception The initial exception to start the search from.
-   * @return The ultimate cause in the exception chain.
-   * @throws NullPointerException If the provided exception is {@code null}.
-   */
-  private Throwable findUltimateCause(Throwable exception) {
-    var ultimateCause = Objects.requireNonNull(exception);
-
-    while (ultimateCause.getCause() != null) {
-      ultimateCause = ultimateCause.getCause();
-    }
-
-    return ultimateCause;
   }
 
 

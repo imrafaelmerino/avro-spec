@@ -4,6 +4,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 
+/**
+ * Utility class with static methods used in the implementation of the AvroSpec classes.
+ */
 public final class AvroSpecFun {
 
   private AvroSpecFun() {

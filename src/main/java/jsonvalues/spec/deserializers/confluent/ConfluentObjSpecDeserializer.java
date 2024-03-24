@@ -1,63 +1,77 @@
-package jsonvalues.spec.deserializers.confluent.avro;
+package jsonvalues.spec.deserializers.confluent;
 
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-import jsonvalues.JsArray;
+import jsonvalues.JsObj;
 import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
 import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.SpecToAvroSchema;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
+/**
+ * Abstract deserializer for deserializing Kafka messages into JSON objects (JsObj) based on JSON specifications. Extend
+ * this class to implement custom deserialization logic.
+ */
 // SuppressWarnings: these constructors are from confluent source code. Anyway, this-scape warning doesn't seem to be an issue to be concerned.
 @SuppressWarnings("this-escape")
-public abstract class JsArraySpecDeserializer extends AbstractKafkaAvroDeserializer
-    implements Deserializer<JsArray> {
+public abstract class ConfluentObjSpecDeserializer extends AbstractKafkaAvroDeserializer
+    implements Deserializer<JsObj> {
 
+  /**
+   * Get the JSON specification defining the structure and constraints of the JSON object.
+   *
+   * @return The JSON specification
+   */
 
   protected abstract JsSpec getSpec();
 
+  /**
+   * Determine if Java Flight Recorder (JFR) is enabled for event tracking during deserialization.
+   *
+   * @return true if JFR is enabled, false otherwise
+   */
   protected abstract boolean isJFREnabled();
 
   private final Schema schema;
 
 
-  public JsArraySpecDeserializer() {
+  public ConfluentObjSpecDeserializer() {
     this.schema = SpecToAvroSchema.convert(getSpec());
   }
 
+
   @SuppressWarnings("this-escape")
-  public JsArraySpecDeserializer(SchemaRegistryClient client) {
+  public ConfluentObjSpecDeserializer(final SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsArraySpecDeserializer(SchemaRegistryClient client,
-                                 Map<String, ?> props) {
+  public ConfluentObjSpecDeserializer(final SchemaRegistryClient client,
+                                      final Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
   }
 
   @Override
-  public void configure(Map<String, ?> props,
-                        boolean isKey) {
+  public void configure(final Map<String, ?> props,
+                        final boolean isKey) {
     this.isKey = isKey;
     configure(deserializerConfig(Objects.requireNonNull(props)),
               null);
   }
 
-  @SuppressWarnings("this-escape")
-  public JsArraySpecDeserializer(SchemaRegistryClient client,
-                                 Map<String, ?> props,
-                                 boolean isKey) {
+  public ConfluentObjSpecDeserializer(final SchemaRegistryClient client,
+                                      final Map<String, ?> props,
+                                      final boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -66,8 +80,8 @@ public abstract class JsArraySpecDeserializer extends AbstractKafkaAvroDeseriali
   }
 
   @Override
-  public JsArray deserialize(String topic,
-                             byte[] bytes) {
+  public JsObj deserialize(final String topic,
+                           final byte[] bytes) {
 
     return deserialize(Objects.requireNonNull(topic),
                        null,
@@ -76,25 +90,25 @@ public abstract class JsArraySpecDeserializer extends AbstractKafkaAvroDeseriali
   }
 
   @Override
-  public JsArray deserialize(String topic,
-                             Headers headers,
-                             byte[] bytes) {
+  public JsObj deserialize(final String topic,
+                           final Headers headers,
+                           final byte[] bytes) {
     if (bytes == null) {
       return null;
     }
 
     if (isJFREnabled()) {
-      var event = new DeserializerEvent();
+      var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
                                                    headers,
                                                    bytes);
-        event.result = DeserializerEvent.RESULT.SUCCESS.name();
+        event.result = ConfluentDeserializerEvent.RESULT.SUCCESS.name();
 
         return AvroToJson.convert(container);
       } catch (Exception e) {
-        event.result = DeserializerEvent.RESULT.FAILURE.name();
+        event.result = ConfluentDeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;
@@ -117,14 +131,14 @@ public abstract class JsArraySpecDeserializer extends AbstractKafkaAvroDeseriali
 
   }
 
-  private GenericArray<?> deserializeToAvroContainer(final String topic,
-                                                     final Headers headers,
-                                                     final byte[] bytes) {
-    return (GenericArray<?>) deserialize(Objects.requireNonNull(topic),
-                                         isKey,
-                                         headers,
-                                         Objects.requireNonNull(bytes),
-                                         schema);
+  private GenericRecord deserializeToAvroContainer(final String topic,
+                                                   final Headers headers,
+                                                   final byte[] bytes) {
+    return (GenericRecord) deserialize(Objects.requireNonNull(topic),
+                                       isKey,
+                                       headers,
+                                       Objects.requireNonNull(bytes),
+                                       schema);
   }
 
 

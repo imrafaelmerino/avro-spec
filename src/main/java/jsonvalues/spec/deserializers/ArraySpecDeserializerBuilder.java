@@ -1,29 +1,31 @@
-package jsonvalues.spec.deserializers.avro;
+package jsonvalues.spec.deserializers;
 
 import java.util.Objects;
-import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.JsArraySpec;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 
 /**
- * Builder class for creating instances of {@link JsObjSpecDeserializer}.
+ * Builder class for creating instances of {@link ObjSpecDeserializer}.
  * <p>
  * This builder provides a convenient way to configure and create {@code SpecDeserializer} instances for deserializing
  * JSON values based on reader and writer specifications.
  * </p>
  */
-public final class JsObjSpecDeserializerBuilder {
+public final class ArraySpecDeserializerBuilder {
 
-  private JsObjSpecDeserializerBuilder(final JsSpec spec) {
-    this.spec = spec;
-  }
-
-  private final JsSpec spec;
-  private GenericRecord reusedRecord;
+  private final JsArraySpec spec;
+  private GenericArray<?> reusedArray;
   private DecoderFactory decoderFactory = DecoderFactory.get();
   private BinaryDecoder reusedDecoder;
   private boolean isJFREnabled = true;
+
+
+  private ArraySpecDeserializerBuilder(JsArraySpec spec) {
+    this.spec = Objects.requireNonNull(spec);
+  }
 
 
   /**
@@ -33,18 +35,28 @@ public final class JsObjSpecDeserializerBuilder {
    * @param spec The specification for writing and reading JSON values.
    * @return A new instance of {@code SpecDeserializerBuilder}.
    */
-  public static JsObjSpecDeserializerBuilder of(JsSpec spec) {
-    return new JsObjSpecDeserializerBuilder(spec);
+  public static ArraySpecDeserializerBuilder of(JsArraySpec spec) {
+    return new ArraySpecDeserializerBuilder(spec);
   }
 
   /**
    * Sets the reused record for the deserializer.
    *
-   * @param reusedRecord The reused {@link GenericRecord} for deserialization.
+   * @param reusedArray The reused {@link GenericRecord} for deserialization.
    * @return This builder instance.
    */
-  public JsObjSpecDeserializerBuilder withReusedRecord(GenericRecord reusedRecord) {
-    this.reusedRecord = Objects.requireNonNull(reusedRecord);
+  public ArraySpecDeserializerBuilder withReusedArray(GenericArray<?> reusedArray) {
+    this.reusedArray = Objects.requireNonNull(reusedArray);
+    return this;
+  }
+
+  /**
+   * Disables Java Flight Recorder (JFR) events for the deserializer.
+   *
+   * @return This builder instance.
+   */
+  public ArraySpecDeserializerBuilder withoutJFREvents() {
+    this.isJFREnabled = false;
     return this;
   }
 
@@ -54,7 +66,7 @@ public final class JsObjSpecDeserializerBuilder {
    * @param decoderFactory The {@code DecoderFactory} to be used for decoding.
    * @return This builder instance.
    */
-  public JsObjSpecDeserializerBuilder withDecoderFactory(DecoderFactory decoderFactory) {
+  public ArraySpecDeserializerBuilder withDecoderFactory(DecoderFactory decoderFactory) {
     this.decoderFactory = Objects.requireNonNull(decoderFactory);
     return this;
   }
@@ -65,25 +77,20 @@ public final class JsObjSpecDeserializerBuilder {
    * @param reusedDecoder The reused {@link BinaryDecoder} for deserialization.
    * @return This builder instance.
    */
-  public JsObjSpecDeserializerBuilder withReusedDecoder(BinaryDecoder reusedDecoder) {
+  public ArraySpecDeserializerBuilder withReusedDecoder(BinaryDecoder reusedDecoder) {
     this.reusedDecoder = Objects.requireNonNull(reusedDecoder);
-    return this;
-  }
-
-  public JsObjSpecDeserializerBuilder withoutJFREvents() {
-    this.isJFREnabled = false;
     return this;
   }
 
 
   /**
-   * Builds and returns a new instance of {@link JsObjSpecDeserializer} based on the configured settings.
+   * Builds and returns a new instance of {@link ObjSpecDeserializer} based on the configured settings.
    *
    * @return A new instance of {@code SpecDeserializer}.
    */
-  public JsObjSpecDeserializer build() {
-    return new JsObjSpecDeserializer(spec,
-                                     reusedRecord,
+  public ArraySpecDeserializer build() {
+    return new ArraySpecDeserializer(spec,
+                                     reusedArray,
                                      decoderFactory,
                                      reusedDecoder,
                                      isJFREnabled);

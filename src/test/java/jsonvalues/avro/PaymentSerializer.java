@@ -1,9 +1,9 @@
 package jsonvalues.avro;
 
 import jsonvalues.spec.JsSpec;
-import jsonvalues.spec.serializers.confluent.avro.JsSpecSerializer;
+import jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer;
 
-public final class PaymentSerializer extends JsSpecSerializer {
+public final class PaymentSerializer extends ConfluentSpecSerializer {
 
   @Override
   protected boolean isJFREnabled() {

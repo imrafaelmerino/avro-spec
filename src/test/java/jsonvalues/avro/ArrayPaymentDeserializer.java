@@ -1,10 +1,9 @@
 package jsonvalues.avro;
 
 import jsonvalues.spec.JsSpec;
-import jsonvalues.spec.deserializers.confluent.avro.JsArraySpecDeserializer;
-import jsonvalues.spec.deserializers.confluent.avro.JsObjSpecDeserializer;
+import jsonvalues.spec.deserializers.confluent.ConfluentArraySpecDeserializer;
 
-public final class ArrayPaymentDeserializer extends JsArraySpecDeserializer {
+public final class ArrayPaymentDeserializer extends ConfluentArraySpecDeserializer {
 
   @Override
   protected JsSpec getSpec() {

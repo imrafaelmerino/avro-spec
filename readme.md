@@ -1,4 +1,4 @@
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.5)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/0.5/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/0.6)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0-RC1/jar)
 
 - [Avro spec](#avro-spec)
 - [Avro schemas](#avro-schema)
@@ -8,13 +8,8 @@
 
 ## <a name="avro-spec"><a/> Avro spec
 
-`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and
-serializers/deserializers with the [specs](https://github.com/imrafaelmerino/json-values#specs) from
-[json-values](https://github.com/imrafaelmerino/json-values). Leveraging the simplicity,
-intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas.
-The provided serializers/deserializers enable the transmission of the immutable and persistent JSON
-from [json-values](https://github.com/imrafaelmerino/json-values) through the wire in Avro format,
-supporting Confluent Schema Registry.
+`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers with the [specs](https://github.com/imrafaelmerino/json-values#specs) from
+[json-values](https://github.com/imrafaelmerino/json-values). Leveraging the simplicity, intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided serializers/deserializers enable the transmission of the immutable and persistent JSON from [json-values](https://github.com/imrafaelmerino/json-values) through the wire in Avro format, supporting Confluent Schema Registry.
 
 ## <a name="avro-schema"><a/> Avro schemas
 
@@ -95,7 +90,10 @@ Resulting Schema:
               "type": {
                 "type": "enum",
                 "name": "phone_type",
-                "symbols": ["MOBILE", "FIXED"]
+                "symbols": [
+                  "MOBILE",
+                  "FIXED"
+                ]
               }
             }
           ]
@@ -122,135 +120,85 @@ Resulting Schema:
 
 ## <a name="recursive-schema"><a/> More elaborated example with recursive schemas
 
-The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the
-implementation of inheritance and the generation of structured data in Java. Let's explore an
-example showcasing the ease of defining object specifications and its Avro schema, generating data,
-and validating against specifications.
+The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance and the generation of structured data in Java. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and validating against specifications.
 
-In this example, picked from [this
-article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
-we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has
-specific attributes, and we use inheritance to share common fields across all device types.
+In this example, picked from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
+we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific attributes, and we use inheritance to share common fields across all device types.
 
 ```code
-String NAME_FIELD = "name";
-String TYPE_FIELD = "type";
-String BUTTON_COUNT_FIELD = "buttonCount";
-String WHEEL_COUNT_FIELD = "wheelCount";
-String TRACKING_TYPE_FIELD = "trackingType";
-String KEY_COUNT_FIELD = "keyCount";
-String MEDIA_BUTTONS_FIELD = "mediaButtons";
-String CONNECTED_DEVICES_FIELD = "connectedDevices";
-String PERIPHERAL_FIELD = "peripheral";
-List<String> TRACKING_TYPE_ENUM = List.of("ball", "optical");
 
-var baseSpec =
-  JsObjSpec.of(NAME_FIELD, JsSpecs.str(),
-               TYPE_FIELD, JsEnumBuilder.withName("type")
-                                        .build("mouse", "keyboard", "usb_hub")
-              );
+    String NAME_FIELD = "name";
+    String TYPE_FIELD = "type";
+    String BUTTON_COUNT_FIELD = "buttonCount";
+    String WHEEL_COUNT_FIELD = "wheelCount";
+    String TRACKING_TYPE_FIELD = "trackingType";
+    String KEY_COUNT_FIELD = "keyCount";
+    String MEDIA_BUTTONS_FIELD = "mediaButtons";
+    String CONNECTED_DEVICES_FIELD = "connectedDevices";
+    String PERIPHERAL_FIELD = "peripheral";
+    List<String> TRACKING_TYPE_ENUM = List.of("ball",
+                                              "optical");
 
-var baseGen = JsObjGen.of(NAME_FIELD, JsStrGen.alphabetic());
+    JsObjSpec baseSpec =
+        JsObjSpec.of(NAME_FIELD,
+                     JsSpecs.str()
+                    );
 
-var mouseSpec =
- JsObjSpecBuilder.withName("mouse")
-                 .build(JsObjSpec.of(BUTTON_COUNT_FIELD, JsSpecs.integer(),
-                                     WHEEL_COUNT_FIELD, JsSpecs.integer(),
-                                     TRACKING_TYPE_FIELD,
-                                     JsEnumBuilder.withName("tracking_type")
-                                                  .build(TRACKING_TYPE_ENUM)
-                                     )
-                                 .concat(baseSpec)
-                        );
+    JsObjSpec mouseSpec =
+        JsObjSpecBuilder.withName("mouse")
+                        .build(JsObjSpec.of(BUTTON_COUNT_FIELD,
+                                            JsSpecs.integer(),
+                                            TYPE_FIELD,
+                                            JsSpecs.cons("mouse_type",
+                                                         JsStr.of("mouse")),
+                                            WHEEL_COUNT_FIELD,
+                                            JsSpecs.integer(),
+                                            TRACKING_TYPE_FIELD,
+                                            JsEnumBuilder.withName("tracking_type")
+                                                         .build(TRACKING_TYPE_ENUM)
+                                           )
+                                        .concat(baseSpec)
+                              );
 
-var mouseGen =
- JsObjGen.of(BUTTON_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-             WHEEL_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-             TRACKING_TYPE_FIELD, Combinators.oneOf(TRACKING_TYPE_ENUM)
-                                             .map(JsStr::of),
-             TYPE_FIELD, Gen.cons(JsStr.of("mouse"))
-            )
-         .concat(baseGen);
+    JsObjSpec keyboardSpec =
+        JsObjSpecBuilder.withName("keyboard")
+                        .build(JsObjSpec.of(KEY_COUNT_FIELD,
+                                            JsSpecs.integer(),
+                                            TYPE_FIELD,
+                                            JsSpecs.cons("keyboard_type",
+                                                         JsStr.of("keyboard")),
+                                            MEDIA_BUTTONS_FIELD,
+                                            JsSpecs.bool()
+                                           )
+                                        .concat(baseSpec)
+                              );
 
-var keyboardSpec =
- JsObjSpecBuilder.withName("keyboard")
-                 .build(JsObjSpec.of(KEY_COUNT_FIELD, JsSpecs.integer(),
-                                     MEDIA_BUTTONS_FIELD, JsSpecs.bool()
-                                     )
-                                 .concat(baseSpec)
-                       );
+    JsObjSpec usbHubSpec =
+        JsObjSpecBuilder.withName("usb_hub")
+                        .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD,
+                                                   JsNull.NULL))
+                        .build(JsObjSpec.of(TYPE_FIELD,
+                                            JsSpecs.cons("usb_hub_type",
+                                                         JsStr.of("usb_hub")),
+                                            CONNECTED_DEVICES_FIELD,
+                                            JsSpecs.arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD))
+                                                   .nullable()
+                                           )
+                                        .withOptKeys(CONNECTED_DEVICES_FIELD)
+                                        .concat(baseSpec)
+                              );
 
-var keyboardGen =
-  JsObjGen.of(KEY_COUNT_FIELD, JsIntGen.arbitrary(0, 10),
-              MEDIA_BUTTONS_FIELD, JsBoolGen.arbitrary(),
-              TYPE_FIELD, Gen.cons(JsStr.of("keyboard"))
-             )
-          .concat(baseGen);
+    JsSpec peripheralSpec =
+        JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
+                            JsSpecs.oneSpecOf(mouseSpec,
+                                              keyboardSpec,
+                                              usbHubSpec
+                                             )
+                           );
 
+    Schema schema = SpecToAvroSchema.convert(peripheralSpec);
 
-var usbHubSpec =
-  JsObjSpecBuilder.withName("usb_hub")
-                  .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD, JsNull.NULL))
-                  .build(JsObjSpec.of(CONNECTED_DEVICES_FIELD,
-                                      arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD)).nullable()
-                                      )
-                                   .withOptKeys(CONNECTED_DEVICES_FIELD)
-                                   .concat(baseSpec)
-                        );
-
-var usbHubGen =
-  JsObjGen.of(CONNECTED_DEVICES_FIELD,
-              JsArrayGen.biased(NamedGen.of(PERIPHERAL_FIELD), 2, 10),
-              TYPE_FIELD, Gen.cons(JsStr.of("usb_hub"))
-             )
-           .withOptKeys(CONNECTED_DEVICES_FIELD)
-           .concat(baseGen);
-
-
-var peripheralSpec =
-  JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
-                      oneSpecOf(mouseSpec,
-                                keyboardSpec,
-                                usbHubSpec
-                                )
-                      );
-
-var peripheralGen =
-   NamedGen.of(PERIPHERAL_FIELD,
-               Combinators.oneOf(mouseGen,
-                                 keyboardGen,
-                                 usbHubGen
-                                 )
-              );
-
-Schema schema = SpecToSchema.convert(peripheralSpec);
-
-System.out.println(schema);
-
-SpecSerializer serializer =
-   SpecSerializerBuilder.of(peripheralSpec)
-                        .enableDebug("peripheral-serializer")
-                        .build();
-
-SpecDeserializer deserializer =
-   SpecDeserializerBuilder.of(peripheralSpec, peripheralSpec)
-                          .enableDebug("peripheral-deserializer")
-                          .build();
-
-peripheralGen.sample(10)
-             .forEach(obj -> {
-
-                              byte[] serialized = serializer.binaryEncode(obj);
-
-                              JsObj deserialized = deserializer.binaryDecode(serialized);
-
-                              Assertions.assertEquals(obj,
-                                                      deserialized.filterValues(JsValue::isNotNull())
-                                                     );
-
-                              }
-                      );
-
+    System.out.println(schema);
 
 ```
 
@@ -275,19 +223,24 @@ and the Avro schema would be:
         "type": "int"
       },
       {
+        "name": "type",
+        "type": {
+          "type": "enum",
+          "name": "mouse_type",
+          "symbols": [
+            "mouse"
+          ]
+        }
+      },
+      {
         "name": "trackingType",
         "type": {
           "type": "enum",
           "name": "tracking_type",
-          "symbols": ["ball", "optical"]
-        }
-      },
-      {
-        "name": "type",
-        "type": {
-          "type": "enum",
-          "name": "type",
-          "symbols": ["mouse", "keyboard", "usb_hub"]
+          "symbols": [
+            "ball",
+            "optical"
+          ]
         }
       }
     ]
@@ -310,7 +263,13 @@ and the Avro schema would be:
       },
       {
         "name": "type",
-        "type": "type"
+        "type": {
+          "type": "enum",
+          "name": "keyboard_type",
+          "symbols": [
+            "keyboard"
+          ]
+        }
       }
     ]
   },
@@ -319,12 +278,18 @@ and the Avro schema would be:
     "name": "usb_hub",
     "fields": [
       {
-        "name": "name",
-        "type": "string"
+        "name": "type",
+        "type": {
+          "type": "enum",
+          "name": "usb_hub_type",
+          "symbols": [
+            "usb_hub"
+          ]
+        }
       },
       {
-        "name": "type",
-        "type": "type"
+        "name": "name",
+        "type": "string"
       },
       {
         "name": "connectedDevices",
@@ -332,7 +297,11 @@ and the Avro schema would be:
           "null",
           {
             "type": "array",
-            "items": ["mouse", "keyboard", "usb_hub"]
+            "items": [
+              "mouse",
+              "keyboard",
+              "usb_hub"
+            ]
           }
         ],
         "default": null
@@ -342,44 +311,121 @@ and the Avro schema would be:
 ]
 ```
 
+## <a name="conversion"><a/> Convert Json to Avro objects and vice versa
+
+Table 1: Avro Type Mappings
+
+| Avro Type | json-values | Avro class                                     |
+| --------- | ----------- | ---------------------------------------------- |
+| null      | JsNull.Null | null                                           |
+| boolean   | JsBool      | java.lang.Boolean                              |
+| int       | JsInt       | java.lang.Integer                              |
+| long      | JsLong      | java.lang.Long                                 |
+| float     | JsDouble    | java.lang.Float                                |
+| double    | JsDouble    | java.lang.Double                               |
+| bytes     | JsBinary    | java.nio.HeapByteBuffer                        |
+| string    | JsStr       | java.lang.String                               |
+| record    | JsObj       | org.apache.avro.generic.GenericData$Record     |
+| enum      | JsStr       | org.apache.avro.generic.GenericData$EnumSymbol |
+| array     | JsArray     | org.apache.avro.generic.GenericData$Array      |
+| map       | JsObj       | java.util.HashMap                              |
+| fixed     | JsBinary    | org.apache.avro.generic.GenericData$Fixed      |
+
+avro-spec defines the following logical types to serialize and deserialize big integers represented with `JsBigDec`, big decimal represented with `JsBigInt`, and instants represented with `JsInstant`:
+
+| Avro Type | Logical Type | json-values Type | Avro class       |
+| --------- | ------------ | ---------------- | ---------------- |
+| string    | bigdecimal   | JsBigDec         | java.lang.String |
+| string    | biginteger   | JsBigInt         | java.lang.String |
+| string    | iso-8601     | JsInstant        | java.lang.String |
+
+Let's see how to do conversions between json-values and Avro objects.
+
+From JSON to Avro using specs
+
+```code
+
+JsObj obj = ???;
+JsSpec objSpec = ???;
+GenericData.Record record = JsonToAvro.convert(obj, objSpec);
+
+JsArray array = ???;
+JsSpec arrSpec = ???;
+GenericData.Array<Object> = JsonToAvro.convert(array, arrSpec);
+
+Json<?> json = ???;
+JsSpec jsonSpec = ???;
+GenericContainer container = JsonToAvro.convert(json, jsonSpec);
+
+```
+
+From JSON to Avro using Avro schemas
+
+```code
+
+JsObj obj = ???;
+Schema objSchema = ???;
+GenericData.Record record = JsonToAvro.convert(obj, objSchema);
+
+JsArray array = ???;
+Schema arrSchema = ???;
+GenericData.Array<Object> = JsonToAvro.convert(array, arrSchema);
+
+Json<?> json = ???;
+JsSpec jsonSpec = ???;
+GenericContainer container = JsonToAvro.convert(json, jsonSpec);
+
+JsValue value = ???;
+Schema valueSchema = ???;
+Object object = JsonToAvro.convertValue(value, valueSchema);
+
+```
+
+And from JSON to Avro:
+
+```code
+GenericData.Record record = ???;
+JsObj obj = AvroToJson.convert(record);
+
+GenericData.Array<Object> avroArr = ???;
+JsArray arr = AvroToJson.convert(avroArr);
+
+Object avroObj = ???;
+Schema avroObjSchema = ???;
+JsValue value = AvroToJson.convert(avroObj, avroObjSchema);
+
+Map<?, ?> map = ???;
+Schema mapSchema = ???;
+JsObj mapObj = AvroToJson.convert(map, mapSchema);
+
+```
+
 ## <a name="serializers"><a/> Avro serializers and deserializers
 
-Avro serializers and deserializers play a crucial role in efficiently encoding and decoding data for
-communication between Kafka producers and consumers. Here, we explore different options available
-for serialization and deserialization with Avro, including integration with the Confluent Schema
-Registry.
+Avro serializers and deserializers play a crucial role in efficiently encoding and decoding data for communication between Kafka producers and consumers. Here, we explore different options available for serialization and deserialization with Avro, including integration with the Confluent Schema Registry.
 
 - Confluent Avro Serializers with Schema Registry Integration
 
-  - `jsonvalues.spec.serializers.confluent.avro.GenericContainerSerializer`: Serializes an Avro
-    `GenericContainer` into bytes.
-  - `jsonvalues.spec.serializers.confluent.avro.JsSpecSerializer`: Serializes a JSON object
-    conforming to a spec into bytes.
+    - `jsonvalues.spec.serializers.confluent.ConfluentSerializer`: Serializes Avro generic containers of type
+      `org.apache.avro.generic.GenericContainer` into bytes.
+    - `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer`: Serializes a JSON object conforming to a spec into bytes.
 
 - Avro serializers:
-  - `jsonvalues.spec.serializers.avro.JsSpecSerializer`: Serializes a JSON object conforming to a
-    spec into bytes.
+    - `jsonvalues.spec.serializers.SpecSerializer`: Serializes a JSON object conforming to a spec into bytes.
 
 And the following deserializers:
 
 - Confluent Avro Deserializers with Schema Registry Integration
 
-  - `jsonvalues.spec.deserializers.confluent.avro.JsObjDeserializer`: Deserializes bytes into a
-    JsObj.
-  - `jsonvalues.spec.deserializers.confluent.avro.JsArrayDeserializer`: Deserializes bytes into a
-    JsArray.
-  - `jsonvalues.spec.deserializers.confluent.avro.JsDeserializer`: Deserializes bytes into a JSON
-    object.
-  - `jsonvalues.spec.deserializers.confluent.avro.JsObjSpecDeserializer`: Deserializes bytes into a
-    JsObj conforming to a spec.
-  - `jsonvalues.spec.deserializers.confluent.avro.JsArraySpecDeserializer`: Deserializes bytes into
-    a JsArray conforming to a spec.
+    - `jsonvalues.spec.deserializers.confluent.ConfluentObjDeserializer`: Deserializes bytes into a JsObj.
+    - `jsonvalues.spec.deserializers.confluent.ConfluentArrayDeserializer`: Deserializes bytes into a JsArray.
+    - `jsonvalues.spec.deserializers.confluent.ConfluentDeserializer`: Deserializes bytes into a JSON object.
+    - `jsonvalues.spec.deserializers.confluent.ConfluentObjSpecDeserializer`: Deserializes bytes into a JsObj conforming to a spec.
+    - `jsonvalues.spec.deserializers.confluent.ConfluentArraySpecDeserializer`: Deserializes bytes into a JsArray conforming to a spec.
 
 - Avro deserializers:
-  - `jsonvalues.spec.deserializers.avro.JsObjSpecDeserializer`: Deserializes bytes into a JsObj
-    conforming to a spec.
-  - `jsonvalues.spec.deserializers.avro.JsArraySpecDeserializer`: Deserializes bytes into a JsArray
-    conforming to a spec.
+    - `jsonvalues.spec.deserializers.ObjSpecDeserializer`: Deserializes bytes into a JsObj conforming to a spec.
+    - `jsonvalues.spec.deserializers.ArraySpecDeserializer`: Deserializes bytes into a JsArray conforming to a spec.
 
 **Which serializer to use?**
 
@@ -396,17 +442,18 @@ Let's consider the following example where we have a topic named "payments":
                                        )
                           );
 
+ //Let's create a generator for payments
  Supplier<JsObj> paymentGen =
     JsObjGen.of("id", JsStrGen.alphabetic(),
-                "amount", JsDoubleGen.arbitrary(100.0d,1000d)).sample();
+                "amount", JsDoubleGen.arbitrary(100.0d,1000d)
+               )
+            .sample();
 
 ```
 
-When working with Kafka, using a single producer for all topics is highly recommended for optimal
-performance due to its thread safety and batching capabilities. Given that, you have two options:
+When working with Kafka, **using a single producer for all topics** is highly recommended for optimal performance due to its thread safety and batching capabilities. Given that, you have two options:
 
-1. `jsonvalues.spec.confluent.avro.GenericContainerSerializer` for Avro Format with Schema Registry
-   Integration:
+1. `jsonvalues.spec.confluent.ConfluentSerializer` for Avro Format with Schema Registry Integration:
 
 ```code
  private static KafkaProducer<String, GenericRecord> createProducer() {
@@ -414,7 +461,7 @@ performance due to its thread safety and batching capabilities. Given that, you 
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
               StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-              GenericContainerSerializer.class);
+              ConfluentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
               "localhost:29092");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
@@ -432,7 +479,9 @@ performance due to its thread safety and batching capabilities. Given that, you 
        GenericRecord record =  JsonToAvro.convert(payment,paymentSpec)
 
        ProducerRecord<String, GenericRecord> record =
-            new ProducerRecord<>(TOPIC, payment.getStr("id") + i, record);
+            new ProducerRecord<>(TOPIC, 
+                                 payment.getStr("id") + i, 
+                                 record);
 
        producer.send(record);
        Thread.sleep(1000L);
@@ -447,12 +496,10 @@ performance due to its thread safety and batching capabilities. Given that, you 
 
 ```
 
-In the first case, we're using `jsonvalues.spec.confluent.avro.GenericContainerSerializer` as the
-value serializer for the producer. Before sending the data to the Kafka topic, we need to convert
-the JSON object (`payment`) into the Avro object `GenericRecord` using
+In the first case, we're using `jsonvalues.spec.confluent.ConfluentSerializer` as the value serializer for the producer. Before sending the data to the Kafka topic, we need to convert the JSON object (`payment`) into the Avro object `GenericRecord` using
 `JsonToAvro.convert(payment, paymentSpec)`.
 
-2. `jsonvalues.spec.avro.JsSpecSerializer` for Avro Format without Schema Registry:
+2. `jsonvalues.spec.serializers.SpecSerializer` for Avro Format without Schema Registry integration:
 
 ```code
  private static KafkaProducer<String, byte[]> createProducer() {
@@ -495,19 +542,17 @@ the JSON object (`payment`) into the Avro object `GenericRecord` using
 ```
 
 In this second case, we're utilizing `org.apache.kafka.common.serialization.ByteArraySerializer`
-from Kafka as the value serializer for the producer. Additionally, we're employing the created
-paymentSerializer to convert the JSON object into bytes in avro format before sending it to the
-Kafka topic.
+from Kafka as the value serializer for the producer. Additionally, we're employing the created paymentSerializer to convert the JSON object into bytes in avro format before sending it to the Kafka topic.
 
-If you have one specific producer for a topic, because the topic requires a specific configuration:
 
-1. `jsonvalues.spec.confluent.avro.JsSpecSerializer` for Avro format and integration with Confluent
-   Schema Registry In this case you need to create a new class and extend `JsSpecSerializer`
+If you have **one specific producer for a topic**, because the topic requires a specific configuration:
+
+1. `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer` for Avro format and integration with Confluent Schema Registry In this case you need to create a new class and extend `JsSpecSerializer`
    providing the spec. Find below and example:
 
 ```code
 
-public final class PaymentSerializer extends JsSpecSerializer {
+public final class PaymentSerializer extends ConfluentSpecSerializer {
 
   @Override
   protected boolean isJFREnabled() {
@@ -553,16 +598,9 @@ private static KafkaProducer<String, JsObj> createPaymentProducer() {
     }
 ```
 
-In this setup, you create a new class `PaymentSerializer` by extending `JsSpecSerializer`, where you
-override the `getSpec()` method to provide the necessary spec (`paymentSpec`). Then, when creating
-the Kafka producer (`createPaymentProducer()`), you specify `PaymentSerializer.class` as the value
-serializer to use for serialization. This serializer will automatically handle the serialization
-process when you pass a `JsObj` to the producer, simplifying the process for you.
+In this setup, you create a new class `PaymentSerializer` by extending `ConfluentSpecSerializer`, where you override the `getSpec()` method to provide the necessary spec (`paymentSpec`). Then, when creating the Kafka producer (`createPaymentProducer()`), you specify `PaymentSerializer.class` as the value serializer to use for serialization. This serializer will automatically handle the serialization process when you pass a `JsObj` to the producer, simplifying the process for you.
 
-2. `jsonvalues.spec.avro.JsSpecSerializer` for Avro format without Schema registry. In this case, we
-   use the `org.apache.kafka.common.serialization.ByteArraySerializer` from Kafka as the value
-   serializer for the producer. Additionally, we employ the `JsSpecSerializer` created using a
-   builder to convert JSON objects into bytes in Avro format before sending them to the Kafka topic.
+2. `jsonvalues.spec.serializers.SpecSerializer` for Avro format without Schema registry. In this case, we use the `org.apache.kafka.common.serialization.ByteArraySerializer` from Kafka as the value serializer for the producer. Additionally, we employ the `JsSpecSerializer` created using a builder to convert JSON objects into bytes in Avro format before sending them to the Kafka topic.
 
 ```code
 private static KafkaProducer<String, byte[]> createProducer() {
@@ -578,9 +616,9 @@ private static KafkaProducer<String, byte[]> createProducer() {
     return new KafkaProducer<>(props);
   }
 
-JsSpecSerializer paymentSerializer =
-        JsSpecSerializerBuilder.of(Specs.paymentSpec)
-                               .build();
+SpecSerializer paymentSerializer =
+        SpecSerializerBuilder.of(Specs.paymentSpec)
+                             .build();
 
 
 int RECORDS = 10;
@@ -608,19 +646,16 @@ try (var producer = createProducer())
 
 What about deserializers?
 
-1. If you opt for the Confluent Avro serializer, you have several deserialization options integrated
-   with the Confluent Schema Registry:
+1. If you opt for the Confluent serializer, you have several deserialization options integrated with the Confluent Schema Registry:
 
-- `jsonvalues.spec.confluent.avro.JsObjDeserializer`: Deserializes into a JsObj.
-- `jsonvalues.spec.confluent.avro.JsArrayDeserializer`: Deserializes into a JsArray.
-- `jsonvalues.spec.confluent.avro.JsDeserializer`: Deserializes into a Json (can be either a JsObj
-  or a JsArray).
+- `jsonvalues.spec.confluent.ConfluentObjDeserializer`: Deserializes into a JsObj.
+- `jsonvalues.spec.confluent.ConfluentArrayDeserializer`: Deserializes into a JsArray.
+- `jsonvalues.spec.confluent.ConfluentDeserializer`: Deserializes into a Json (can be either a JsObj or a JsArray).
 - You can also create custom deserializers by extending
-  `jsonvalues.spec.confluent.avro.JsObjSpecDeserializer` or
-  `jsonvalues.spec.confluent.avro.JsArraySpecDeserializer` to ensure deserialized data conforms to a
-  specific schema.
+  `jsonvalues.spec.confluent.ConfluentObjSpecDeserializer` or
+  `jsonvalues.spec.confluent.ConfluentArraySpecDeserializer` to ensure deserialized data conforms to a specific schema.
 
-Example using `JsObjDeserializer`:
+Example using `ConfluentObjDeserializer`:
 
 ```code
 
@@ -633,7 +668,7 @@ private static KafkaConsumer<String, JsObj> createPaymentDeserializer() {
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
               StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-              jsonvalues.spec.confluent.avro.JsObjDeserializer.class);
+              jsonvalues.spec.confluent.ConfluentObjDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
               "http://localhost:8081");
     return new KafkaConsumer<>(props);
@@ -662,8 +697,8 @@ Example using a spec deserializer:
 
 ```code
 
-//must create a new deserializer extending JsObjSpecDeserializer
-public final class PaymentDeserializer extends JsObjSpecDeserializer {
+//must create a new deserializer extending ConfluentObjSpecDeserializer
+public final class PaymentDeserializer extends ConfluentObjSpecDeserializer {
 
   @Override
   protected JsSpec getSpec() {
@@ -697,14 +732,12 @@ private static KafkaConsumer<String, JsObj> createPaymentDeserializer() {
 
 ```
 
-2. If you're utilizing the Avro serializer without Schema Registry integration, you have the option
-   to employ the builders `jsonvalues.spec.avro.JsObjSpecDeserializerBuilder` and
-   `jsonvalues.spec.avro.JsArraySpecDeserializerBuilder` to construct deserializers from
-   specifications. These builders facilitate the creation of custom deserializers tailored to your
-   specific data schemas.
+In this second example, it's important to note that every deserialized object adheres to the payment specification; otherwise, the deserialization process would not succeed.
 
-Below is an example demonstrating the usage of a ByteArrayDeserializer from Kafka along with a spec
-deserializer to convert bytes into a JsObj and consume a Kafka topic:
+2. If you're using the serializer without Schema Registry integration, you can employ the builders `jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder` and
+   `jsonvalues.spec.deserializers.ArraySpecDeserializerBuilder` to construct deserializers from specifications. These builders facilitate the creation of custom deserializers tailored to your specific data schemas.
+
+Below is an example demonstrating the usage of a `ByteArrayDeserializer` from Kafka along with a spec deserializer to convert bytes into a JsObj and consume a Kafka topic:
 
 ```code
 
@@ -723,9 +756,9 @@ deserializer to convert bytes into a JsObj and consume a Kafka topic:
     return new KafkaConsumer<>(props);
   }
 
-  JsObjSpecDeserializer paymentDeserializer =
-        JsObjSpecDeserializerBuilder.of(Specs.paymentSpec)
-                                    .build();
+  ObjSpecDeserializer paymentDeserializer =
+        ObjSpecDeserializerBuilder.of(paymentSpec)
+                                  .build();
 
   try (var consumer = createConsumer()) {
       consumer.subscribe(List.of(TOPIC));
@@ -745,28 +778,60 @@ deserializer to convert bytes into a JsObj and consume a Kafka topic:
       }
     }
 
-
 ```
 
 **Monitoring Serializers/Deserializers with JFR Events**
 
-All the serializers and deserializers in this library support Java Flight Recorder (JFR) events.
+All the serializers and deserializers in this library support Java Flight Recorder (JFR) events. The different events are:
+
+- `ConfluentSerializerEvent`
+- `ConfluentDeserializerEvent`
+- `SerializerEvent`
+- `DeserializerEvent`
+
+There are four predefined formatters, which are functions that format the events into a string. Consider the following example to log some events using a JFR stream:
+
+ ```code
+ RecordingStream rs = new RecordingStream();
+ 
+ rs.setOrdered(true);
+ 
+ String eventName = "Confluent_Avro_Serializer_Event";
+ 
+ rs.onEvent(eventName,
+            recordedEvent -> logger.info(ConfluentSerializerEventFormatter.apply(recordedEvent))
+           );
+           
+ rs.onEvent(eventName,
+            recordedEvent -> logger.info(ConfluentDeserializerEventFormatter.apply(recordedEvent))
+           );           
+ 
+ rs.startAsync();          
+      
+ ```
+
+If you are using [jio-test](), create a debugger in your test specifying the stream duration, and you will see the events printed out on the console
+
+```code
+
+@RegisterExtension
+static Debugger debugger = Debugger.of(Duration.ofSeconds(5));
+
+```
 
 ## <a name="installation"><a/> Installation
 
-To include avro-spec in your project, add the corresponding dependency to your build tool based on
-your Java version:
+To include avro-spec in your project, add the corresponding dependency to your build tool based on your Java version:
 
 ```xml
 
 <dependency>
   <groupId>com.github.imrafaelmerino</groupId>
   <artifactId>avro-spec</artifactId>
-  <version>0.5</version>
+  <version>1.0.0-RC1</version>
 </dependency>
 
 ```
 
 Requires Java 21 or higher
 
-Find [here](./changelog.md) the releases notes.

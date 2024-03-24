@@ -1,14 +1,15 @@
-package jsonvalues.spec.deserializers.avro;
+package jsonvalues.spec.deserializers;
 
 import java.io.IOException;
+import jsonvalues.JsArray;
 import jsonvalues.JsObj;
 import jsonvalues.spec.AvroSpecFun;
 import jsonvalues.spec.AvroToJson;
-import jsonvalues.spec.JsSpec;
+import jsonvalues.spec.JsArraySpec;
 import jsonvalues.spec.SpecToAvroSchema;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 
@@ -20,29 +21,29 @@ import org.apache.avro.io.DecoderFactory;
  * specifications. It ensures that the decoded JSON values conform to the reader specification.
  * </p>
  */
-public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
+public final class ArraySpecDeserializer extends AbstractSpecDeserializer {
 
   final boolean isJFREnabled;
-  final JsSpec spec;
-  final GenericRecord reusedRecord;
-  final GenericDatumReader<GenericRecord> reader;
 
+  final JsArraySpec spec;
+  final GenericArray<?> reusedArray;
 
-  JsObjSpecDeserializer(JsSpec spec,
-                        GenericRecord reusedRecord,
+  final GenericDatumReader<GenericArray<?>> reader;
+
+  ArraySpecDeserializer(JsArraySpec spec,
+                        GenericArray<?> reusedArray,
                         DecoderFactory decoderFactory,
                         BinaryDecoder reusedDecoder,
                         boolean isJFREnabled
                        ) {
     super(SpecToAvroSchema.convert(spec),
           decoderFactory,
-          reusedDecoder
-         );
+          reusedDecoder);
     this.spec = spec;
-    this.reusedRecord = reusedRecord;
+    this.reusedArray = reusedArray;
     this.isJFREnabled = isJFREnabled;
-    this.reader = new GenericDatumReader<>(schema,
-                                           schema);
+    this.reader = new GenericDatumReader<>(schema);
+
   }
 
 
@@ -52,7 +53,7 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
    * @param json The Avro binary data to decode.
    * @return A {@code JsObj} representing the decoded JSON value.
    */
-  public JsObj deserialize(final byte[] json) {
+  public JsArray deserialize(final byte[] json) {
     if (json == null) {
       return null;
     }
@@ -79,22 +80,25 @@ public final class JsObjSpecDeserializer extends AbstractSpecDeserializer {
       return binaryDecode(json);
     }
 
+
   }
 
-  private JsObj binaryDecode(final byte[] json) {
+  private JsArray binaryDecode(final byte[] json) {
     try {
       var decoder = decoderFactory.binaryDecoder(json,
                                                  reusedDecoder);
-      GenericRecord record = reader.read(reusedRecord,
-                                         decoder);
-      JsObj decoded = AvroToJson.convert(record);
+      GenericArray<?> record = reader.read(reusedArray,
+                                           decoder);
+      JsArray decoded = AvroToJson.convert(record);
       assert spec.test(decoded)
                  .isEmpty() :
-          "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: %s".formatted(spec.test(decoded));
+          "Deserialized json doesn't conform the reader spec of the `AvroSpecDeserializer`. Errors: "
+          + spec.test(decoded);
       return decoded;
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
+
 
 }

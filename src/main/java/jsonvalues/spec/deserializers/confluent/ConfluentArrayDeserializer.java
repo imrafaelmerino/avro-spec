@@ -1,4 +1,4 @@
-package jsonvalues.spec.deserializers.confluent.avro;
+package jsonvalues.spec.deserializers.confluent;
 
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer;
@@ -12,26 +12,34 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
+/**
+ * Deserializer for deserializing Kafka messages into JSON array (JsArray). This class extends the
+ * {@link AbstractKafkaAvroDeserializer} class from the Confluent Kafka Avro library. It implements the
+ * {@link Deserializer} interface for deserializing Kafka messages into JSON arrays (JsArray). It's integrated with the
+ * Java Flight Recorder (JFR) for debugging and monitoring Avro deserialization events (use the property
+ * "avro.spec.confluent.deserializer.jfr.enabled" to enable or disable JFR integration). It's also integrated with the
+ * Confluent Schema Registry for deserializing Avro messages.
+ */
+public final class ConfluentArrayDeserializer extends AbstractKafkaAvroDeserializer
     implements Deserializer<JsArray> {
 
   final boolean isJFREnabled;
 
 
-  public JsArrayDeserializer() {
+  public ConfluentArrayDeserializer() {
     isJFREnabled =
         Boolean.parseBoolean(System.getProperty("avro.spec.confluent.deserializer.jfr.enabled",
                                                 "true"));
   }
 
-  public JsArrayDeserializer(SchemaRegistryClient client) {
+  public ConfluentArrayDeserializer(SchemaRegistryClient client) {
     this();
     this.schemaRegistry = client;
     this.ticker = ticker(client);
   }
 
-  public JsArrayDeserializer(SchemaRegistryClient client,
-                             Map<String, ?> props) {
+  public ConfluentArrayDeserializer(SchemaRegistryClient client,
+                                    Map<String, ?> props) {
     this(Objects.requireNonNull(client),
          Objects.requireNonNull(props),
          false);
@@ -45,9 +53,9 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
               null);
   }
 
-  public JsArrayDeserializer(SchemaRegistryClient client,
-                             Map<String, ?> props,
-                             boolean isKey) {
+  public ConfluentArrayDeserializer(SchemaRegistryClient client,
+                                    Map<String, ?> props,
+                                    boolean isKey) {
     this();
     this.schemaRegistry = Objects.requireNonNull(client);
     this.ticker = ticker(Objects.requireNonNull(client));
@@ -74,16 +82,16 @@ public final class JsArrayDeserializer extends AbstractKafkaAvroDeserializer
     }
 
     if (isJFREnabled) {
-      var event = new DeserializerEvent();
+      var event = new ConfluentDeserializerEvent();
       event.begin();
       try {
         var container = deserializeToAvroContainer(topic,
                                                    headers,
                                                    bytes);
-        event.result = DeserializerEvent.RESULT.SUCCESS.name();
+        event.result = ConfluentDeserializerEvent.RESULT.SUCCESS.name();
         return AvroToJson.convert(container);
       } catch (Exception e) {
-        event.result = DeserializerEvent.RESULT.FAILURE.name();
+        event.result = ConfluentDeserializerEvent.RESULT.FAILURE.name();
         event.exception = AvroSpecFun.findUltimateCause(e)
                                      .toString();
         throw e;

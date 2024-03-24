@@ -20,7 +20,6 @@ import jsonvalues.spec.JsObjSpec;
 import jsonvalues.spec.JsObjSpecBuilder;
 import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsSpecs;
-import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.SpecToAvroSchema;
 
 public class Specs {
