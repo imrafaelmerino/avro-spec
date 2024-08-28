@@ -1,0 +1,10 @@
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+.DS_Store
+target
+javadoc
+deploy.sh
+settings.xml
+.idea
+*.iml
