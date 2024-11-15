@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./avro-spec-logo.png" alt="Logo" width="300" height="300" />
+</p>
+
 [![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/1.0.0-RC1)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0-RC1/jar)
 
 - [Avro spec](#avro-spec)
