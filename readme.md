@@ -2,18 +2,24 @@
   <img src="./avro-spec-logo.png" alt="Logo" width="300" height="300" />
 </p>
 
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/1.0.0-RC1)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0-RC1/jar)
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/1.0.0)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0/jar)
 
 - [Avro spec](#avro-spec)
 - [Avro schemas](#avro-schema)
 - [A more elaborated example with recursive schemas](#recursive-schema)
 - [Avro serializer and deserializer](#seria-deseria)
 - [Installation](#installation)
+- [Running Integration Tests](#rit)
 
 ## <a name="avro-spec"><a/> Avro spec
 
-`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and serializers/deserializers with the [specs](https://github.com/imrafaelmerino/json-values#specs) from
-[json-values](https://github.com/imrafaelmerino/json-values). Leveraging the simplicity, intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas. The provided serializers/deserializers enable the transmission of the immutable and persistent JSON from [json-values](https://github.com/imrafaelmerino/json-values) through the wire in Avro format, supporting Confluent Schema Registry.
+`avro-spec` empowers you to create [Avro](https://avro.apache.org/) schemas and
+serializers/deserializers with the [specs](https://github.com/imrafaelmerino/json-values#specs) from
+[json-values](https://github.com/imrafaelmerino/json-values). Leveraging the simplicity,
+intuitiveness, and composability of creating specs allows you to efficiently define Avro schemas.
+The provided serializers/deserializers enable the transmission of the immutable and persistent JSON
+from [json-values](https://github.com/imrafaelmerino/json-values) through the wire in Avro format,
+supporting Confluent Schema Registry.
 
 ## <a name="avro-schema"><a/> Avro schemas
 
@@ -94,10 +100,7 @@ Resulting Schema:
               "type": {
                 "type": "enum",
                 "name": "phone_type",
-                "symbols": [
-                  "MOBILE",
-                  "FIXED"
-                ]
+                "symbols": ["MOBILE", "FIXED"]
               }
             }
           ]
@@ -124,10 +127,15 @@ Resulting Schema:
 
 ## <a name="recursive-schema"><a/> More elaborated example with recursive schemas
 
-The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the implementation of inheritance and the generation of structured data in JSON. Let's explore an example showcasing the ease of defining object specifications and its Avro schema, generating data, and validating against specifications.
+The [json-values](https://github.com/imrafaelmerino/json-values/) library simplifies the
+implementation of inheritance and the generation of structured data in JSON. Let's explore an
+example showcasing the ease of defining object specifications and its Avro schema, generating data,
+and validating against specifications.
 
-In this example, picked from [this article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
-we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has specific attributes, and we use inheritance to share common fields across all device types.
+In this example, picked from [this
+article](https://json-schema.org/blog/posts/modelling-inheritance#so-is-inheritance-in-json-schema-possible)
+we model a hierarchy of devices, including mice, keyboards, and USB hubs. Each device type has
+specific attributes, and we use inheritance to share common fields across all device types.
 
 ```java
 
@@ -231,9 +239,7 @@ and the Avro schema would be:
         "type": {
           "type": "enum",
           "name": "mouse_type",
-          "symbols": [
-            "mouse"
-          ]
+          "symbols": ["mouse"]
         }
       },
       {
@@ -241,10 +247,7 @@ and the Avro schema would be:
         "type": {
           "type": "enum",
           "name": "tracking_type",
-          "symbols": [
-            "ball",
-            "optical"
-          ]
+          "symbols": ["ball", "optical"]
         }
       }
     ]
@@ -270,9 +273,7 @@ and the Avro schema would be:
         "type": {
           "type": "enum",
           "name": "keyboard_type",
-          "symbols": [
-            "keyboard"
-          ]
+          "symbols": ["keyboard"]
         }
       }
     ]
@@ -286,9 +287,7 @@ and the Avro schema would be:
         "type": {
           "type": "enum",
           "name": "usb_hub_type",
-          "symbols": [
-            "usb_hub"
-          ]
+          "symbols": ["usb_hub"]
         }
       },
       {
@@ -301,11 +300,7 @@ and the Avro schema would be:
           "null",
           {
             "type": "array",
-            "items": [
-              "mouse",
-              "keyboard",
-              "usb_hub"
-            ]
+            "items": ["mouse", "keyboard", "usb_hub"]
           }
         ],
         "default": null
@@ -335,7 +330,8 @@ Table 1: Avro Type Mappings
 | map       | JsObj       | java.util.HashMap                              |
 | fixed     | JsBinary    | org.apache.avro.generic.GenericData$Fixed      |
 
-avro-spec defines the following logical types to serialize and deserialize big integers represented with `JsBigDec`, big decimal represented with `JsBigInt`, and instants represented with `JsInstant`:
+avro-spec defines the following logical types to serialize and deserialize big integers represented
+with `JsBigDec`, big decimal represented with `JsBigInt`, and instants represented with `JsInstant`:
 
 | Avro Type | Logical Type | json-values Type | Avro class       |
 | --------- | ------------ | ---------------- | ---------------- |
@@ -406,30 +402,42 @@ JsObj mapObj = AvroToJson.convert(map, mapSchema);
 
 ## <a name="serializers"><a/> Avro serializers and deserializers
 
-Avro serializers and deserializers play a crucial role in efficiently encoding and decoding data for communication between Kafka producers and consumers. Here, we explore different options available for serialization and deserialization with Avro, including integration with the Confluent Schema Registry.
+Avro serializers and deserializers play a crucial role in efficiently encoding and decoding data for
+communication between Kafka producers and consumers. Here, we explore different options available
+for serialization and deserialization with Avro, including integration with the Confluent Schema
+Registry.
 
 - Confluent Avro Serializers with Schema Registry Integration
 
-    - `jsonvalues.spec.serializers.confluent.ConfluentSerializer`: Serializes Avro generic containers of type
-      `org.apache.avro.generic.GenericContainer` into bytes.
-    - `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer`: Serializes a JSON object conforming to a spec into bytes.
+  - `jsonvalues.spec.serializers.confluent.ConfluentSerializer`: Serializes Avro generic containers
+    of type `org.apache.avro.generic.GenericContainer` into bytes.
+  - `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer`: Serializes a JSON object
+    conforming to a spec into bytes.
 
 - Avro serializers:
-    - `jsonvalues.spec.serializers.SpecSerializer`: Serializes a JSON object conforming to a spec into bytes.
+  - `jsonvalues.spec.serializers.SpecSerializer`: Serializes a JSON object conforming to a spec into
+    bytes.
 
 And the following deserializers:
 
 - Confluent Avro Deserializers with Schema Registry Integration
 
-    - `jsonvalues.spec.deserializers.confluent.ConfluentObjDeserializer`: Deserializes bytes into a JsObj.
-    - `jsonvalues.spec.deserializers.confluent.ConfluentArrayDeserializer`: Deserializes bytes into a JsArray.
-    - `jsonvalues.spec.deserializers.confluent.ConfluentDeserializer`: Deserializes bytes into a JSON object.
-    - `jsonvalues.spec.deserializers.confluent.ConfluentObjSpecDeserializer`: Deserializes bytes into a JsObj conforming to a spec.
-    - `jsonvalues.spec.deserializers.confluent.ConfluentArraySpecDeserializer`: Deserializes bytes into a JsArray conforming to a spec.
+  - `jsonvalues.spec.deserializers.confluent.ConfluentObjDeserializer`: Deserializes bytes into a
+    JsObj.
+  - `jsonvalues.spec.deserializers.confluent.ConfluentArrayDeserializer`: Deserializes bytes into a
+    JsArray.
+  - `jsonvalues.spec.deserializers.confluent.ConfluentDeserializer`: Deserializes bytes into a JSON
+    object.
+  - `jsonvalues.spec.deserializers.confluent.ConfluentObjSpecDeserializer`: Deserializes bytes into
+    a JsObj conforming to a spec.
+  - `jsonvalues.spec.deserializers.confluent.ConfluentArraySpecDeserializer`: Deserializes bytes
+    into a JsArray conforming to a spec.
 
 - Avro deserializers:
-    - `jsonvalues.spec.deserializers.ObjSpecDeserializer`: Deserializes bytes into a JsObj conforming to a spec.
-    - `jsonvalues.spec.deserializers.ArraySpecDeserializer`: Deserializes bytes into a JsArray conforming to a spec.
+  - `jsonvalues.spec.deserializers.ObjSpecDeserializer`: Deserializes bytes into a JsObj conforming
+    to a spec.
+  - `jsonvalues.spec.deserializers.ArraySpecDeserializer`: Deserializes bytes into a JsArray
+    conforming to a spec.
 
 **Which serializer to use?**
 
@@ -455,7 +463,9 @@ Let's consider the following example where we have a topic named "payments":
 
 ```
 
-When working with Kafka, **using a single producer for all topics** is highly recommended for optimal performance due to its thread safety and batching capabilities. Given that, you have two options:
+When working with Kafka, **using a single producer for all topics** is highly recommended for
+optimal performance due to its thread safety and batching capabilities. Given that, you have two
+options:
 
 1. `jsonvalues.spec.confluent.ConfluentSerializer` for Avro Format with Schema Registry Integration:
 
@@ -483,8 +493,8 @@ When working with Kafka, **using a single producer for all topics** is highly re
        GenericRecord record =  JsonToAvro.convert(payment,paymentSpec)
 
        ProducerRecord<String, GenericRecord> record =
-            new ProducerRecord<>(TOPIC, 
-                                 payment.getStr("id") + i, 
+            new ProducerRecord<>(TOPIC,
+                                 payment.getStr("id") + i,
                                  record);
 
        producer.send(record);
@@ -500,7 +510,9 @@ When working with Kafka, **using a single producer for all topics** is highly re
 
 ```
 
-In the first case, we're using `jsonvalues.spec.confluent.ConfluentSerializer` as the value serializer for the producer. Before sending the data to the Kafka topic, we need to convert the JSON object (`payment`) into the Avro object `GenericRecord` using
+In the first case, we're using `jsonvalues.spec.confluent.ConfluentSerializer` as the value
+serializer for the producer. Before sending the data to the Kafka topic, we need to convert the JSON
+object (`payment`) into the Avro object `GenericRecord` using
 `JsonToAvro.convert(payment, paymentSpec)`.
 
 2. `jsonvalues.spec.serializers.SpecSerializer` for Avro Format without Schema Registry integration:
@@ -546,13 +558,16 @@ In the first case, we're using `jsonvalues.spec.confluent.ConfluentSerializer` a
 ```
 
 In this second case, we're utilizing `org.apache.kafka.common.serialization.ByteArraySerializer`
-from Kafka as the value serializer for the producer. Additionally, we're employing the created paymentSerializer to convert the JSON object into bytes in avro format before sending it to the Kafka topic.
+from Kafka as the value serializer for the producer. Additionally, we're employing the created
+paymentSerializer to convert the JSON object into bytes in avro format before sending it to the
+Kafka topic.
 
+If you have **one specific producer for a topic**, because the topic requires a specific
+configuration:
 
-If you have **one specific producer for a topic**, because the topic requires a specific configuration:
-
-1. `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer` for Avro format and integration with Confluent Schema Registry In this case you need to create a new class and extend `JsSpecSerializer`
-   providing the spec. Find below and example:
+1. `jsonvalues.spec.serializers.confluent.ConfluentSpecSerializer` for Avro format and integration
+   with Confluent Schema Registry In this case you need to create a new class and extend
+   `JsSpecSerializer` providing the spec. Find below and example:
 
 ```java
 
@@ -602,9 +617,16 @@ private static KafkaProducer<String, JsObj> createPaymentProducer() {
     }
 ```
 
-In this setup, you create a new class `PaymentSerializer` by extending `ConfluentSpecSerializer`, where you override the `getSpec()` method to provide the necessary spec (`paymentSpec`). Then, when creating the Kafka producer (`createPaymentProducer()`), you specify `PaymentSerializer.class` as the value serializer to use for serialization. This serializer will automatically handle the serialization process when you pass a `JsObj` to the producer, simplifying the process for you.
+In this setup, you create a new class `PaymentSerializer` by extending `ConfluentSpecSerializer`,
+where you override the `getSpec()` method to provide the necessary spec (`paymentSpec`). Then, when
+creating the Kafka producer (`createPaymentProducer()`), you specify `PaymentSerializer.class` as
+the value serializer to use for serialization. This serializer will automatically handle the
+serialization process when you pass a `JsObj` to the producer, simplifying the process for you.
 
-2. `jsonvalues.spec.serializers.SpecSerializer` for Avro format without Schema registry. In this case, we use the `org.apache.kafka.common.serialization.ByteArraySerializer` from Kafka as the value serializer for the producer. Additionally, we employ the `JsSpecSerializer` created using a builder to convert JSON objects into bytes in Avro format before sending them to the Kafka topic.
+2. `jsonvalues.spec.serializers.SpecSerializer` for Avro format without Schema registry. In this
+   case, we use the `org.apache.kafka.common.serialization.ByteArraySerializer` from Kafka as the
+   value serializer for the producer. Additionally, we employ the `JsSpecSerializer` created using a
+   builder to convert JSON objects into bytes in Avro format before sending them to the Kafka topic.
 
 ```java
 private static KafkaProducer<String, byte[]> createProducer() {
@@ -650,14 +672,17 @@ try (var producer = createProducer())
 
 What about deserializers?
 
-1. If you opt for the Confluent serializer, you have several deserialization options integrated with the Confluent Schema Registry:
+1. If you opt for the Confluent serializer, you have several deserialization options integrated with
+   the Confluent Schema Registry:
 
 - `jsonvalues.spec.confluent.ConfluentObjDeserializer`: Deserializes into a JsObj.
 - `jsonvalues.spec.confluent.ConfluentArrayDeserializer`: Deserializes into a JsArray.
-- `jsonvalues.spec.confluent.ConfluentDeserializer`: Deserializes into a Json (can be either a JsObj or a JsArray).
+- `jsonvalues.spec.confluent.ConfluentDeserializer`: Deserializes into a Json (can be either a JsObj
+  or a JsArray).
 - You can also create custom deserializers by extending
   `jsonvalues.spec.confluent.ConfluentObjSpecDeserializer` or
-  `jsonvalues.spec.confluent.ConfluentArraySpecDeserializer` to ensure deserialized data conforms to a specific schema.
+  `jsonvalues.spec.confluent.ConfluentArraySpecDeserializer` to ensure deserialized data conforms to
+  a specific schema.
 
 Example using `ConfluentObjDeserializer`:
 
@@ -736,12 +761,17 @@ private static KafkaConsumer<String, JsObj> createPaymentDeserializer() {
 
 ```
 
-In this second example, it's important to note that every deserialized object adheres to the payment specification; otherwise, the deserialization process would not succeed.
+In this second example, it's important to note that every deserialized object adheres to the payment
+specification; otherwise, the deserialization process would not succeed.
 
-2. If you're using the serializer without Schema Registry integration, you can employ the builders `jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder` and
-   `jsonvalues.spec.deserializers.ArraySpecDeserializerBuilder` to construct deserializers from specifications. These builders facilitate the creation of custom deserializers tailored to your specific data schemas.
+2. If you're using the serializer without Schema Registry integration, you can employ the builders
+   `jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder` and
+   `jsonvalues.spec.deserializers.ArraySpecDeserializerBuilder` to construct deserializers from
+   specifications. These builders facilitate the creation of custom deserializers tailored to your
+   specific data schemas.
 
-Below is an example demonstrating the usage of a `ByteArrayDeserializer` from Kafka along with a spec deserializer to convert bytes into a JsObj and consume a Kafka topic:
+Below is an example demonstrating the usage of a `ByteArrayDeserializer` from Kafka along with a
+spec deserializer to convert bytes into a JsObj and consume a Kafka topic:
 
 ```java
 
@@ -786,35 +816,38 @@ Below is an example demonstrating the usage of a `ByteArrayDeserializer` from Ka
 
 **Monitoring Serializers/Deserializers with JFR Events**
 
-All the serializers and deserializers in this library support Java Flight Recorder (JFR) events. The different events are:
+All the serializers and deserializers in this library support Java Flight Recorder (JFR) events. The
+different events are:
 
 - `ConfluentSerializerEvent`
 - `ConfluentDeserializerEvent`
 - `SerializerEvent`
 - `DeserializerEvent`
 
-There are four predefined formatters, which are functions that format the events into a string. Consider the following example to log some events using a JFR stream:
+There are four predefined formatters, which are functions that format the events into a string.
+Consider the following example to log some events using a JFR stream:
 
- ```java
- RecordingStream rs = new RecordingStream();
- 
- rs.setOrdered(true);
- 
- String eventName = "Confluent_Avro_Serializer_Event";
- 
- rs.onEvent(eventName,
-            recordedEvent -> logger.info(ConfluentSerializerEventFormatter.apply(recordedEvent))
-           );
-           
- rs.onEvent(eventName,
-            recordedEvent -> logger.info(ConfluentDeserializerEventFormatter.apply(recordedEvent))
-           );           
- 
- rs.startAsync();          
-      
- ```
+```java
+RecordingStream rs = new RecordingStream();
 
-If you are using [jio-test](), create a debugger in your test specifying the stream duration, and you will see the events printed out on the console
+rs.setOrdered(true);
+
+String eventName = "Confluent_Avro_Serializer_Event";
+
+rs.onEvent(eventName,
+           recordedEvent -> logger.info(ConfluentSerializerEventFormatter.apply(recordedEvent))
+          );
+
+rs.onEvent(eventName,
+           recordedEvent -> logger.info(ConfluentDeserializerEventFormatter.apply(recordedEvent))
+          );
+
+rs.startAsync();
+
+```
+
+If you are using [jio-test](), create a debugger in your test specifying the stream duration, and
+you will see the events printed out on the console
 
 ```java
 
@@ -825,17 +858,77 @@ static Debugger debugger = Debugger.of(Duration.ofSeconds(5));
 
 ## <a name="installation"><a/> Installation
 
-To include avro-spec in your project, add the corresponding dependency to your build tool based on your Java version:
+To include avro-spec in your project, add the corresponding dependency to your build tool based on
+your Java version:
 
 ```xml
 
 <dependency>
   <groupId>com.github.imrafaelmerino</groupId>
   <artifactId>avro-spec</artifactId>
-  <version>1.0.0-RC1</version>
+  <version>1.0.0</version>
 </dependency>
 
 ```
 
 Requires Java 21 or higher
 
+## <a name="rit"><a/> Running Integration Tests
+
+Before executing the integration tests, ensure that Kafka is up and running, a topic is created, and
+an Avro schema is associated with the topic's values. To do this, follow the steps below, using the
+provided [`docker-compose.yml`](src/test/resources/docker-compose.yml) file to start the Confluent platform:
+
+```shell
+cd src/test/resources
+
+docker-compose up
+
+SCHEMA_REGISTRY_HOST="localhost"
+SCHEMA_REGISTRY_PORT="8081"
+REST_PROXY_PORT="8082"
+REST_PROXY_HOST="localhost"
+TOPIC_NAME="transactions"
+
+CLUSTER_ID=$(curl -s -X GET -H "Accept: application/json" "http://${REST_PROXY_HOST}:${REST_PROXY_PORT}/v3/clusters" | jq -r '.data[0].cluster_id')
+
+echo $CLUSTER_ID
+
+curl -X POST \
+-H "Content-Type: application/json" \
+-H "Accept: application/json" \
+--data '{
+    "topic_name": "'${TOPIC_NAME}'",
+    "partitions_count": 1,
+    "replication_factor": 1
+ }' \
+"http://${REST_PROXY_HOST}:${REST_PROXY_PORT}/v3/clusters/${CLUSTER_ID}/topics"
+
+
+curl -X POST \
+-H "Content-Type: application/vnd.schemaregistry.v1+json" \
+--data '{
+    "schema": "{\"namespace\": \"io.confluent.examples.clients.basicavro\",
+               \"type\": \"record\",
+               \"name\": \"Payment\",
+               \"fields\": [
+                 {\"name\": \"id\", \"type\": \"string\"},
+                 {\"name\": \"amount\", \"type\": \"double\"}
+               ]
+             }"
+  }' \
+"http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}/subjects/${TOPIC_NAME}-value/versions"
+```
+
+You can verify that everything is working correctly by visiting the Control Center at
+[http://localhost:9021/clusters](http://localhost:9021/clusters).
+
+Once Kafka is running, the topic is created, and the schema is registered, you're ready to run your
+integration tests.
+
+To run the tests, use one of the following Maven commands:
+
+- `mvn failsafe:integration-test` — To run integration tests only.
+- `mvn verify` — To run both unit and integration tests.
+
+---

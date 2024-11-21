@@ -24,7 +24,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,11 +32,13 @@ import org.junit.jupiter.api.Test;
  * { "namespace": "io.confluent.examples.clients.basicavro", "type": "record", "name": "Payment", "fields": [ {"name":
  * "id", "type": "string"}, {"name": "amount", "type": "double"} ] }
  */
-@Disabled
-public class PaymentsTopicProducerTest {
+public class PaymentsTopicProducerIT {
 
+  private static final String BOOSTRAP_SERVER = "localhost:9092";
+  private static final String REGISTRY = "http://localhost:8081";
   final static KafkaProducer<String, GenericRecord> producer = createProducer();
   final static KafkaProducer<String, JsObj> specProducer = createSpecProducer();
+  static String TOPIC = "transactions";
 
   private static KafkaProducer<String, JsObj> createSpecProducer() {
 
@@ -47,9 +48,9 @@ public class PaymentsTopicProducerTest {
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
               PaymentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     props.put(ProducerConfig.ACKS_CONFIG,
               "all");
     props.put(ProducerConfig.RETRIES_CONFIG,
@@ -64,9 +65,9 @@ public class PaymentsTopicProducerTest {
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
               ConfluentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     props.put(ProducerConfig.ACKS_CONFIG,
               "all");
     props.put(ProducerConfig.RETRIES_CONFIG,
@@ -77,7 +78,7 @@ public class PaymentsTopicProducerTest {
   private static KafkaConsumer<String, Json<?>> createConsumerWithJsonDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-json-deserializer");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -87,14 +88,14 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
               "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
 
   private static KafkaConsumer<String, JsObj> createConsumerWithJsSpecDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-json-spec-deserializer");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -104,14 +105,14 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
               "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
 
   private static KafkaConsumer<String, JsObj> createConsumerWithJsonObjDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-jsobj-deserializer");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -121,11 +122,9 @@ public class PaymentsTopicProducerTest {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               ConfluentObjDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
-
-  static String TOPIC = "transactions";
 
   @Test
   public void testCreateMessagesWithSpecProducer() throws InterruptedException {

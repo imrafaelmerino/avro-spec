@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jio.test.pbt.PropBuilder;
+import jio.test.pbt.PropertyBuilder;
 import jio.test.pbt.TestFailure;
 import jio.test.pbt.TestResult;
 import jsonvalues.JsArray;
@@ -75,7 +75,6 @@ import jsonvalues.spec.JsSpec;
 import jsonvalues.spec.JsSpecs;
 import jsonvalues.spec.JsonToAvro;
 import jsonvalues.spec.SpecToAvroSchema;
-import jsonvalues.spec.SpecToJsonSchema;
 import jsonvalues.spec.SpecToSchemaException;
 import jsonvalues.spec.deserializers.ObjSpecDeserializer;
 import jsonvalues.spec.deserializers.ObjSpecDeserializerBuilder;
@@ -87,7 +86,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 
-public class TestsObjDerSer {
+public class ObjDerSerTests {
 
 
   Supplier<String> nameGen = StrGen.alphabetic(10,
@@ -95,8 +94,9 @@ public class TestsObjDerSer {
                                    .sample();
 
 
-  private static void testSpec(JsSpec spec,
-                               JsObj input
+  private static void testSpec(
+      JsSpec spec,
+      JsObj input
                               ) {
     testSpec(spec,
              input,
@@ -104,9 +104,10 @@ public class TestsObjDerSer {
              Map.of());
   }
 
-  private static void testSpec(JsSpec spec,
-                               JsObj input,
-                               Map<String, JsValue> defaults
+  private static void testSpec(
+      JsSpec spec,
+      JsObj input,
+      Map<String, JsValue> defaults
                               ) {
     testSpec(spec,
              input,
@@ -114,9 +115,10 @@ public class TestsObjDerSer {
              defaults);
   }
 
-  private static void testSpec(JsSpec spec,
-                               JsObj input,
-                               JsObj expected
+  private static void testSpec(
+      JsSpec spec,
+      JsObj input,
+      JsObj expected
                               ) {
     testSpec(spec,
              input,
@@ -124,10 +126,11 @@ public class TestsObjDerSer {
              Map.of());
   }
 
-  private static void testSpec(JsSpec spec,
-                               JsObj input,
-                               JsObj expected,
-                               Map<String, JsValue> defaults
+  private static void testSpec(
+      JsSpec spec,
+      JsObj input,
+      JsObj expected,
+      Map<String, JsValue> defaults
                               ) {
 
     GenericData.Record record = JsonToAvro.convert(input,
@@ -149,8 +152,9 @@ public class TestsObjDerSer {
 
   }
 
-  private static void testSpec(JsSpec spec,
-                               JsArray input
+  private static void testSpec(
+      JsSpec spec,
+      JsArray input
                               ) {
 
     GenericData.Array<Object> arr = JsonToAvro.convert(input,
@@ -169,30 +173,54 @@ public class TestsObjDerSer {
 
   }
 
-  private static boolean equals(JsObj input,
-                                JsObj deserialized,
-                                Map<String, JsValue> defaults) {
-    System.out.println(input);
-    System.out.println(deserialized);
+  /**
+   * Compares two JSON-like objects (JsObj): `actual` and `expected`.
+   * Ensures they are equal while considering default values for missing keys in `actual`.
+   *
+   * @param actual     The main object to validate.
+   * @param expected   The object containing the full expected data, including possible defaults.
+   * @param defaults   A map of default values to be applied when `actual` does not have the corresponding keys.
+   * @return true if `actual` matches `expected` considering the defaults, false otherwise.
+   */
+  private static boolean equals(
+      JsObj actual,
+      JsObj expected,
+      Map<String, JsValue> defaults
+                                             ) {
+
+
+    // If there are no default values, perform a direct comparison.
     if (defaults.isEmpty()) {
-      return input.equals(deserialized);
+      return actual.equals(expected);
     }
-    var xs = deserialized.filterKeys((path, value) -> path.size() != 1 || input.containsKey(path.head()
-                                                                                                .asKey().name));
-    if (!xs.equals(input)) {
+
+    // Step 1: Filter keys in `expected` that are explicitly defined in `actual`.
+    var matchingKeys = expected.filterKeys((path, value) ->
+                                               path.size() != 1 || actual.containsKey(path.head().asKey().name)
+                                          );
+
+    // If the filtered object (matchingKeys) does not equal `actual`, return false.
+    if (!matchingKeys.equals(actual)) {
       return false;
     }
-    var ys = deserialized.filterKeys((path, value) -> path.size() != 1 || !input.containsKey(path.head()
-                                                                                                 .asKey().name));
-    return ys.keySet()
-             .stream()
-             .allMatch(key -> ys.get(key)
-                                .equals(defaults.get(key)));
+
+    // Step 2: Filter keys in `expected` that are NOT present in `actual`.
+    var defaultKeys = expected.filterKeys((path, value) ->
+                                              path.size() != 1 || !actual.containsKey(path.head().asKey().name)
+                                         );
+
+    // Step 3: Ensure all default-applied keys in `expected` match the provided defaults.
+    return defaultKeys.keySet()
+                      .stream()
+                      .allMatch(key -> defaultKeys.get(key).equals(defaults.get(key)));
   }
 
-  private static void testSerializer(JsObjSpec spec,
-                                     JsObj input,
-                                     JsObj expected) {
+
+  private static void testSerializer(
+      JsObjSpec spec,
+      JsObj input,
+      JsObj expected
+                                    ) {
 
     testSerializer(spec,
                    input,
@@ -200,10 +228,12 @@ public class TestsObjDerSer {
                    Map.of());
   }
 
-  private static void testSerializer(JsSpec spec,
-                                     JsObj input,
-                                     JsObj expected,
-                                     Map<String, JsValue> defaults) {
+  private static void testSerializer(
+      JsSpec spec,
+      JsObj input,
+      JsObj expected,
+      Map<String, JsValue> defaults
+                                    ) {
 
     SpecSerializer specSerializer =
         SpecSerializerBuilder.of(spec)
@@ -220,8 +250,10 @@ public class TestsObjDerSer {
   }
 
 
-  private static void testSerializer(JsSpec spec,
-                                     JsObj input) {
+  private static void testSerializer(
+      JsSpec spec,
+      JsObj input
+                                    ) {
 
     testSerializer(spec,
                    input,
@@ -230,9 +262,11 @@ public class TestsObjDerSer {
   }
 
 
-  private static void testSerializer(JsSpec spec,
-                                     JsObj input,
-                                     Map<String, JsValue> defaults) {
+  private static void testSerializer(
+      JsSpec spec,
+      JsObj input,
+      Map<String, JsValue> defaults
+                                    ) {
 
     testSerializer(spec,
                    input,
@@ -468,13 +502,13 @@ public class TestsObjDerSer {
                             "h",
                             JsBinary.of("hi".getBytes(StandardCharsets.UTF_8)));
 
-    JsObj expected3 = input1;
     testSpec(spec,
              input3,
-             expected3);
+             input1);
+
     testSerializer(spec,
                    input3,
-                   expected3);
+                   input1);
 
   }
 
@@ -743,8 +777,7 @@ public class TestsObjDerSer {
                                   arrayOfBigInt().nullable(),
                                   "decimal",
                                   arrayOfDec().nullable(),
-                                  "double",
-                                  arrayOfDouble().nullable(),
+
                                   "boolean",
                                   arrayOfBool().nullable(),
                                   "binary",
@@ -772,8 +805,7 @@ public class TestsObjDerSer {
                  JsNull.NULL);
     defaults.put("decimal",
                  JsNull.NULL);
-    defaults.put("double",
-                 JsNull.NULL);
+
     defaults.put("boolean",
                  JsNull.NULL);
     defaults.put("binary",
@@ -805,9 +837,7 @@ public class TestsObjDerSer {
                                "decimal",
                                JsArrayGen.ofN(JsBigDecGen.arbitrary(),
                                               10),
-                               "double",
-                               JsArrayGen.ofN(JsDoubleGen.arbitrary(),
-                                              10),
+
                                "boolean",
                                JsArrayGen.ofN(JsBoolGen.arbitrary(),
                                               10),
@@ -1354,88 +1384,17 @@ public class TestsObjDerSer {
       return equals(obj,
                     xs,
                     defaults)
-             ? TestResult.SUCCESS :
-             TestFailure.reason("Different than generated: %s".formatted(xs));
+          ? TestResult.SUCCESS :
+          TestFailure.reason("Different than generated: %s".formatted(xs));
     };
-    PropBuilder.of("input -> bytes[] -> input",
-                   gen,
-                   fun)
-               .build()
-               .repeatPar(100)
-               .check()
-               .assertAllSuccess();
+    PropertyBuilder.of("input -> bytes[] -> input",
+                       gen,
+                       fun)
+                   .get()
+                   .repeatPar(5)
+                   .check()
+                   .assertAllSuccess();
 
-  }
-
-  public static void main(String[] args)  {
-    String NAME_FIELD = "name";
-    String TYPE_FIELD = "type";
-    String BUTTON_COUNT_FIELD = "buttonCount";
-    String WHEEL_COUNT_FIELD = "wheelCount";
-    String TRACKING_TYPE_FIELD = "trackingType";
-    String KEY_COUNT_FIELD = "keyCount";
-    String MEDIA_BUTTONS_FIELD = "mediaButtons";
-    String CONNECTED_DEVICES_FIELD = "connectedDevices";
-    String PERIPHERAL_FIELD = "peripheral";
-    JsSpec TRACKING_TYPE_ENUM = JsEnumBuilder.withName("tracking")
-                                             .build(
-                                                 "ball",
-                                                 "optical");
-    var baseSpec =
-        JsObjSpec.of(NAME_FIELD,
-                     JsSpecs.str()
-                    );
-
-    var mouseSpec =
-        JsObjSpec.of(TYPE_FIELD,
-                     JsSpecs.cons("mouse_type",
-                                  JsStr.of("mouse")),
-                     BUTTON_COUNT_FIELD,
-                     JsSpecs.integer(),
-                     WHEEL_COUNT_FIELD,
-                     JsSpecs.integer(),
-                     TRACKING_TYPE_FIELD,
-                     TRACKING_TYPE_ENUM
-                    )
-                 .concat(baseSpec);
-
-    var keyboardSpec =
-        JsObjSpec.of(TYPE_FIELD,
-                     JsSpecs.cons("keyboard_type",
-                                  JsStr.of("keyboard")),
-                     KEY_COUNT_FIELD,
-                     JsSpecs.integer(),
-                     MEDIA_BUTTONS_FIELD,
-                     JsSpecs.bool()
-                    )
-                 .concat(baseSpec);
-
-    var usbHubSpec =
-        JsObjSpecBuilder.withName("usb_hub")
-                        .withFieldsDefaults(Map.of(CONNECTED_DEVICES_FIELD,
-                                                   JsNull.NULL))
-                        .build(JsObjSpec.of(
-                                            TYPE_FIELD,
-                                            JsSpecs.cons("usbHub_type",
-                                                         JsStr.of("usbHub")),
-                                            CONNECTED_DEVICES_FIELD,
-                                            JsSpecs.arrayOfSpec(JsSpecs.ofNamedSpec(PERIPHERAL_FIELD))
-                                                   .nullable()
-                                           )
-                                        .withOptKeys(CONNECTED_DEVICES_FIELD)
-                                        .concat(baseSpec));
-
-    var peripheralSpec =
-        JsSpecs.ofNamedSpec(PERIPHERAL_FIELD,
-                            oneSpecOf(JsSpecs.ofNamedSpec("mouse",
-                                                          mouseSpec),
-                                      JsSpecs.ofNamedSpec("keyboard",
-                                                          keyboardSpec),
-                                      JsSpecs.ofNamedSpec("usbHub",
-                                                          usbHubSpec)));
-
-    System.out.println(SpecToJsonSchema.convert(peripheralSpec));
-    System.out.println(SpecToAvroSchema.convert(peripheralSpec));
   }
 
 

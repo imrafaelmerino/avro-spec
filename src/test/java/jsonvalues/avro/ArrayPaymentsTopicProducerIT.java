@@ -24,13 +24,20 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.VoidDeserializer;
 import org.apache.kafka.common.serialization.VoidSerializer;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+/**
+ *
+ * The following schema has been set in the topic "payments" in the kafka cluster.
+ * <p>
+ * { "namespace": "io.confluent.examples.clients.basicavro", "type": "record", "name": "Payment", "fields": [ {"name":
+ * "id", "type": "string"}, {"name": "amount", "type": "double"} ] }
+ */
 
-@Disabled
-public class ArrayPaymentsTopicProducerTests {
+public class ArrayPaymentsTopicProducerIT {
 
   final static KafkaProducer<Void, GenericArray<?>> producer = createProducer();
+  private static final String BOOSTRAP_SERVER = "localhost:9092";
+  private static final String REGISTRY = "http://localhost:8081";
 
   private static KafkaProducer<Void, GenericArray<?>> createProducer() {
     Properties props = new Properties();
@@ -39,9 +46,9 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
               ConfluentSerializer.class);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     props.put(ProducerConfig.ACKS_CONFIG,
               "all");
     props.put(ProducerConfig.RETRIES_CONFIG,
@@ -52,7 +59,7 @@ public class ArrayPaymentsTopicProducerTests {
   private static KafkaConsumer<String, Json<?>> createConsumerWithJsonDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-json-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -62,14 +69,14 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
               "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
 
   private static KafkaConsumer<Void, JsArray> createConsumerWithJsonArrDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-js-array-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -79,14 +86,14 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
               "earliest");
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
 
   private static KafkaConsumer<Void, JsArray> createConsumerWithJsonArrSpecDeserializer() {
     Properties props = new Properties();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-              "localhost:29092");
+              BOOSTRAP_SERVER);
     props.put(ConsumerConfig.GROUP_ID_CONFIG,
               "group-js-array-spec-deserializer-array-payments");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -96,7 +103,7 @@ public class ArrayPaymentsTopicProducerTests {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
               ArrayPaymentDeserializer.class);
     props.put(SCHEMA_REGISTRY_URL_CONFIG,
-              "http://localhost:8081");
+              REGISTRY);
     return new KafkaConsumer<>(props);
   }
 

@@ -13,7 +13,6 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Thread-safe class for serializing JSON objects to Avro binary or JSON format based on a provided Avro schema.
@@ -75,7 +74,6 @@ public final class SpecSerializer {
     }
   }
 
-  @NotNull
   private byte[] binaryEncode(final Json<?> json) {
     assert spec.test(json)
                .isEmpty() :
