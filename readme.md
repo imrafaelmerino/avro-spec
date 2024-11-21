@@ -907,17 +907,9 @@ curl -X POST \
 
 curl -X POST \
 -H "Content-Type: application/vnd.schemaregistry.v1+json" \
---data '{
-    "schema": "{\"namespace\": \"io.confluent.examples.clients.basicavro\",
-               \"type\": \"record\",
-               \"name\": \"Payment\",
-               \"fields\": [
-                 {\"name\": \"id\", \"type\": \"string\"},
-                 {\"name\": \"amount\", \"type\": \"double\"}
-               ]
-             }"
-  }' \
+--data @payment-schema.json \
 "http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}/subjects/${TOPIC_NAME}-value/versions"
+
 ```
 
 You can verify that everything is working correctly by visiting the Control Center at
