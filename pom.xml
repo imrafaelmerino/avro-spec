@@ -50,6 +50,7 @@
     <KAFKA-AVRO-SERIALIZER.VERSION>7.7.1</KAFKA-AVRO-SERIALIZER.VERSION>
     <JIO-TEST.VERSION>3.0.0-RC2</JIO-TEST.VERSION>
     <LOGBACK-CLASSIC.VERSION>1.5.12</LOGBACK-CLASSIC.VERSION>
+    <MAVEN-FAILSAFE-PLUGIN.VERSION>3.1.2</MAVEN-FAILSAFE-PLUGIN.VERSION>
   </properties>
 
   <dependencies>
@@ -92,7 +93,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.1.2</version>
+        <version>${MAVEN-FAILSAFE-PLUGIN.VERSION}</version>
         <executions>
           <execution>
             <goals>
