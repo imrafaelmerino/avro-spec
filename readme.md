@@ -4,6 +4,8 @@
 
 [![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/avro-spec/1.0.0)](https://search.maven.org/artifact/com.github.imrafaelmerino/avro-spec/1.0.0/jar)
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-%E2%98%95%20Support-yellow)](https://www.buymeacoffee.com/imrafaelmerino)
+
 - [Avro spec](#avro-spec)
 - [Avro schemas](#avro-schema)
 - [A more elaborated example with recursive schemas](#recursive-schema)
